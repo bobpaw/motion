@@ -57,7 +57,7 @@ int main (int argc, char* argv[]) {
 	SDL_CALL(RenderDrawPoint, graphics_renderer, 20, 30);
 	DrawCircle(graphics_renderer, 20, 30, 15);
 	SDL_CALL(RenderDrawPoint, graphics_renderer, 55, 30);
-	for (int i = 10; i < 16; ++i)
+	for (int i = 0; i < 16; ++i)
 	DrawCircle(graphics_renderer, 55, 30, i);
 	SDL_RenderPresent(graphics_renderer); // Returns void
 	// SDL_Delay(20); Using VSync
