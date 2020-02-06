@@ -80,6 +80,22 @@ struct Plane {
 	void makeParticle (double x, double y, PVector v) {
 		particles.emplace_back(x, y, v, this);
 	}
+
+private:
+	void checkCollision() {
+		for (int p = 0; p < particles.size(); ++p) {
+			for (int i = 0; i < particles.size(); ++i) {
+				if (p == i) continue;
+				if ((particles[p].x))
+			}
+		}
+	}
+
+public:
+	void motion () {
+		checkCollision();
+
+	}
 };
 
 #undef main
@@ -101,10 +117,16 @@ int main (int argc, char* argv[]) {
 		return -1;
 	}
 	graphics_renderer = SDL_CreateRenderer(graphics_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC); // Use hardware acceleration and vsync
+	SDL_Texture* ball = SDL_CreateTexture(graphics_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 21, 21);
 	int k_timeout_max = 1, k_timeout = 0;
 	Plane screen(ScreenHeight, ScreenWidth);
 	screen.makeParticle(320, 200, PVector(1, M_PI_4));
 	screen.particles[0].radius = 10;
+	SDL_SetRenderDrawColor(graphics_renderer, 255, 255, 255, 255);
+	SDL_SetRenderTarget(graphics_renderer, ball);
+	for (int i = 1; i < 11; ++i) DrawCircle(graphics_renderer, 10, 10, i);
+	SDL_SetRenderTarget(graphics_renderer, NULL);
+	SDL_Rect dest;
 	while (window_quit == false) {
 		while (SDL_PollEvent(&event) != 0) { // SDL_PollEvent automatically updates key_state array
 			if (event.type == SDL_QUIT) {
@@ -140,9 +162,11 @@ int main (int argc, char* argv[]) {
 		SDL_SetRenderDrawColor(graphics_renderer, 0, 0, 0, 0);
 		SDL_RenderClear(graphics_renderer); // Cover screen in a black rectangle, effectively clearing the screen
 		// Render sprites to screen
-		SDL_SetRenderDrawColor(graphics_renderer, 255, 255, 255, 255);
-		SDL_RenderDrawPoint(graphics_renderer, int(screen.particles[0].x), int(screen.particles[0].y));
-		DrawCircle(graphics_renderer, screen.particles[0].x, screen.particles[0].y, screen.particles[0].radius);
+		dest.w = 20;
+		dest.h = 20;
+		dest.x = screen.particles[0].x - screen.particles[0].radius;
+		dest.y = screen.particles[0].y - screen.particles[0].radius;
+		SDL_RenderCopy(graphics_renderer, ball, NULL, &dest);
 		SDL_RenderPresent(graphics_renderer); // Update screen based on changes
 		// SDL_Delay(20); // Wait 20 milliseconds, should blip 50 fps
 	}
