@@ -69,7 +69,8 @@ struct Plane {
 			if ((x - radius) < 0 || (x + radius) >= father->width) {
 				velocity.dir = correct_deg(180 - velocity.dir);
 				Point2D::move(velocity);
-			} else if ((y - radius) < 0 || (y + radius) >= father->height) {
+			}
+			if ((y - radius) < 0 || (y + radius) >= father->height) {
 				velocity.dir = correct_deg(velocity.dir * -1);
 				Point2D::move(velocity);
 			}
