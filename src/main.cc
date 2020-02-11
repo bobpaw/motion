@@ -53,24 +53,22 @@ struct Point2D {
 
 struct Plane {
 	struct Particle: public Point2D {
-	private:
-		Plane* father;
 	public:
 		PVector velocity;
 		double mass;
 		double radius;
 
-		Particle (double x, double y, PVector v, Plane* f): Point2D(x, y), father(f), velocity(v), mass(0), radius(0) {}
-		Particle (double x, double y, PVector v): Particle(x, y, v, nullptr) {}
+		Particle (double x, double y, PVector v): Point2D(x, y), velocity(v), mass(0), radius(0) {}
 		Particle (double x = 0.0, double y = 0.0): Particle(x, y, PVector(0.0, 0.0)) {}
 
-		void move () {
+		// [min, max)
+		void move (int maxx, int maxy, int minx = 0, int miny = 0) {
 			Point2D::move(velocity);
-			if ((x - radius) < 0 || (x + radius) >= father->width) {
+			if ((x - radius) < minx || (x + radius) >= maxx) {
 				velocity.dir = correct_deg(180 - velocity.dir);
 				Point2D::move(velocity);
 			}
-			if ((y - radius) < 0 || (y + radius) >= father->height) {
+			if ((y - radius) < miny || (y + radius) >= maxy) {
 				velocity.dir = correct_deg(velocity.dir * -1);
 				Point2D::move(velocity);
 			}
@@ -81,7 +79,24 @@ struct Plane {
 	std::vector<Particle> particles;
 	Plane(double h, double w): height(h), width(w), particles() {}
 	void makeParticle (double x, double y, PVector v) {
-		particles.emplace_back(x, y, v, this);
+		particles.emplace_back(x, y, v);
+	}
+
+	void moveParticle (size_t n) {
+		particles[n].move(static_cast<int>(width), static_cast<int>(height));
+	}
+
+	// Member particle access
+	decltype(Particle::x)& x (size_t n) {
+		return particles[n].x;
+	}
+
+	decltype(Particle::y)& y (size_t n) {
+		return particles[n].y;
+	}
+
+	decltype(Particle::velocity)& velocity (size_t n) {
+		return particles[n].velocity;
 	}
 };
 
@@ -137,7 +152,7 @@ int main (int argc, char* argv[]) {
 		}
 
 		// Motion
-		screen.particles[0].move();
+		screen.moveParticle(0);
 
 		// Clear screen
 		SDL_SetRenderDrawColor(graphics_renderer, 0, 0, 0, 0);
