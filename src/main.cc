@@ -13,12 +13,14 @@ const int ScreenWidth = 640;
 const int ScreenHeight = 400;
 
 double correct_rad (double x) {
-	while (x < 0) {
-		x += 2 * M_PI;
-	}
-	while (x > 2 * M_PI) {
-		x -= 2 * M_PI;
-	}
+	while (x < 0) x += 2 * M_PI;
+	while (x > 2 * M_PI) x -= 2 * M_PI;
+	return x;
+}
+
+double correct_deg (double x) {
+	while (x < 0.0) x += 360;
+	while (x > 360.0) x -= 360.0;
 	return x;
 }
 
@@ -29,11 +31,11 @@ struct PVector {
 	PVector (double x, double y): mag(x), dir(y) {}
 
 	double horizontal () const {
-		return mag * std::cos(dir);
+		return mag * std::cos(dir * M_PI / 180);
 	}
 
 	double vertical () const {
-		return mag * std::sin(dir);
+		return mag * std::sin(dir * M_PI / 180);
 	}
 };
 
@@ -65,10 +67,10 @@ struct Plane {
 		void move () {
 			Point2D::move(velocity);
 			if ((x - radius) < 0 || (x + radius) >= father->width) {
-				velocity.dir = correct_rad(M_PI - velocity.dir);
+				velocity.dir = correct_deg(180 - velocity.dir);
 				Point2D::move(velocity);
 			} else if ((y - radius) < 0 || (y + radius) >= father->height) {
-				velocity.dir = correct_rad(velocity.dir * -1.0);
+				velocity.dir = correct_deg(velocity.dir * -1);
 				Point2D::move(velocity);
 			}
 		}
@@ -103,7 +105,7 @@ int main (int argc, char* argv[]) {
 	graphics_renderer = SDL_CreateRenderer(graphics_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC); // Use hardware acceleration and vsync
 	int k_timeout_max = 1, k_timeout = 0;
 	Plane screen(ScreenHeight, ScreenWidth);
-	screen.makeParticle(320, 200, PVector(1, M_PI_4));
+	screen.makeParticle(320, 200, PVector(1, 45.0));
 	screen.particles[0].radius = 10;
 	while (window_quit == false) {
 		while (SDL_PollEvent(&event) != 0) { // SDL_PollEvent automatically updates key_state array
@@ -122,13 +124,13 @@ int main (int argc, char* argv[]) {
 				screen.particles[0].velocity.mag -= 0.02;
 			}
 			if (key_state[SDL_SCANCODE_RIGHT] && !key_state[SDL_SCANCODE_LEFT]) {
-				screen.particles[0].velocity.dir += 2 * M_PI / 180.0;
+				screen.particles[0].velocity.dir += 2;
 			} else if (!key_state[SDL_SCANCODE_RIGHT] && key_state[SDL_SCANCODE_LEFT]) {
-				screen.particles[0].velocity.dir -= 2 * M_PI / 180.0;
+				screen.particles[0].velocity.dir -= 2;
 			}
 			if (key_state[SDL_SCANCODE_0]) {
 				screen.particles[0].velocity.mag = 1;
-				screen.particles[0].velocity.dir = M_PI_4;
+				screen.particles[0].velocity.dir = 45;
 			}
 			k_timeout = k_timeout_max;
 		}
@@ -143,7 +145,7 @@ int main (int argc, char* argv[]) {
 		SDL_SetRenderDrawColor(graphics_renderer, 255, 255, 255, 255);
 		SDL_RenderDrawPoint(graphics_renderer, int(screen.particles[0].x), int(screen.particles[0].y));
 		DrawCircle(graphics_renderer, screen.particles[0].x, screen.particles[0].y, screen.particles[0].radius);
-		std::cout << "\rVelocity: " << screen.particles[0].velocity.mag << " Direction: " << screen.particles[0].velocity.dir * 180.0 / M_PI;
+		std::cout << "\rVelocity: " << screen.particles[0].velocity.mag << " Direction: " << screen.particles[0].velocity.dir;
 		SDL_RenderPresent(graphics_renderer); // Update screen based on changes
 		// SDL_Delay(20); // Wait 20 milliseconds, should blip 50 fps
 	}
