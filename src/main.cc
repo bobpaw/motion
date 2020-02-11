@@ -143,6 +143,7 @@ int main (int argc, char* argv[]) {
 		SDL_SetRenderDrawColor(graphics_renderer, 255, 255, 255, 255);
 		SDL_RenderDrawPoint(graphics_renderer, int(screen.particles[0].x), int(screen.particles[0].y));
 		DrawCircle(graphics_renderer, screen.particles[0].x, screen.particles[0].y, screen.particles[0].radius);
+		std::cout << "\rVelocity: " << screen.particles[0].velocity.mag << " Direction: " << screen.particles[0].velocity.dir * 180.0 / M_PI;
 		SDL_RenderPresent(graphics_renderer); // Update screen based on changes
 		// SDL_Delay(20); // Wait 20 milliseconds, should blip 50 fps
 	}
