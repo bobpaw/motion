@@ -18,7 +18,7 @@ static int DrawCircle_pts(SDL_Renderer* renderer, int cx, int cy, int x, int y) 
 	return 0;
 }
 
-int DrawCircle(SDL_Renderer* renderer, int cx, int cy, double r) {
+int DrawCircle(SDL_Renderer* renderer, int cx, int cy, int r) {
   int x = r, y = 0, dx = 1 - 2 * r, dy  = 1, RE = 0;
   while (x >= y) {
 		DrawCircle_pts(renderer, cx, cy, x, y);
