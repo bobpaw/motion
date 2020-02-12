@@ -15,6 +15,7 @@ SDL_ERROR2(func); \
 #define SDL_CONCAT2(x, y) x##y
 #define SDL_CONCAT(x, y) SDL_CONCAT2(x, y)
 
+#ifndef NDEBUG
 #define SDL_CALL(func, ...) do { \
 if (SDL_CONCAT(SDL_, func)(__VA_ARGS__) < 0) { \
 SDL_ERROR(func); \
@@ -23,5 +24,8 @@ SDL_Quit(); \
 return -1; \
 } \
 } while(0)
+#else
+#define SDL_CALL(func, ...) SDL_CONCAT(SDL_, func)(__VA_ARGS__)
+#endif
 
 #endif // MOTION_SDL_CALL_H
