@@ -1,7 +1,5 @@
 #include <iostream>
 #include <random>
-#include <vector>
-#include <cmath>
 
 #include "SDL.h"
 
@@ -82,7 +80,7 @@ int main (int argc, char* argv[]) {
 		dest.x = static_cast<int>(screen.x(0) - screen.radius(0));
 		dest.y = static_cast<int>(screen.y(0) - screen.radius(0));
 		SDL_RenderCopy(graphics_renderer, ball, NULL, &dest);
-		std::cout << "\rVelocity: " << screen.velocity(0).mag << " Direction: " << screen.velocity(0).dir;
+		std::cout << "\rVelocity: " << screen.velocity(0).mag << "\tDirection: " << screen.velocity(0).dir << "     ";
 		SDL_RenderPresent(graphics_renderer); // Update screen based on changes
 		// SDL_Delay(20); // Wait 20 milliseconds, should blip 50 fps
 	}
