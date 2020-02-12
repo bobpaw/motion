@@ -6,8 +6,8 @@ target_link_libraries(motion "${SDL_NS}::SDL2" "$<$<NOT:$<C_COMPILER_ID:MSVC>>:m
 add_executable(single single.cc physics.h constants.h shapes.h)
 target_link_libraries(single "${SDL_NS}::SDL2" "$<$<NOT:$<C_COMPILER_ID:MSVC>>:m>")
 
-add_executable(circle demo_shapes.cc shapes.h)
-target_link_libraries(circle "${SDL_NS}::SDL2" "$<$<NOT:$<C_COMPILER_ID:MSVC>>:m>")
+add_executable(demo_shapes demo_shapes.cc shapes.h)
+target_link_libraries(demo_shapes "${SDL_NS}::SDL2" "$<$<NOT:$<C_COMPILER_ID:MSVC>>:m>")
 ## target_compile_features(movinga PRIVATE ...)
 
 

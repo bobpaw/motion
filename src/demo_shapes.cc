@@ -41,7 +41,7 @@ int main (int argc, char* argv[]) {
 	// SDL_Delay(20); Using VSync
 	do {
 		if (SDL_WaitEvent(&event) == 0) {
-			SDL_ERROR(SDL_WaitEvent);
+			SDL_ERROR(WaitEvent);
 			break;
 		}
 	} while (event.type != SDL_QUIT);
