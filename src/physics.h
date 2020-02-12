@@ -92,6 +92,10 @@ namespace phys {
 		decltype(Particle::velocity)& velocity (size_t n) {
 			return particles[n].velocity;
 		}
+
+		decltype(Particle::radius)& radius (size_t n) {
+			return particles[n].radius;
+		}
 	};
 } // namespace phys
 

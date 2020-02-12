@@ -56,18 +56,18 @@ int main (int argc, char* argv[]) {
 			--k_timeout;
 		} else {
 			if (key_state[SDL_SCANCODE_UP] && !key_state[SDL_SCANCODE_DOWN]) {
-				screen.particles[0].velocity.mag += 0.02;
+				screen.velocity(0).mag += 0.02;
 			} else if (!key_state[SDL_SCANCODE_UP] && key_state[SDL_SCANCODE_DOWN]) {
-				screen.particles[0].velocity.mag -= 0.02;
+				screen.velocity(0).mag -= 0.02;
 			}
 			if (key_state[SDL_SCANCODE_RIGHT] && !key_state[SDL_SCANCODE_LEFT]) {
-				screen.particles[0].velocity.dir += 2;
+				screen.velocity(0).dir += 2;
 			} else if (!key_state[SDL_SCANCODE_RIGHT] && key_state[SDL_SCANCODE_LEFT]) {
-				screen.particles[0].velocity.dir -= 2;
+				screen.velocity(0).dir -= 2;
 			}
 			if (key_state[SDL_SCANCODE_0]) {
-				screen.particles[0].velocity.mag = 1;
-				screen.particles[0].velocity.dir = 0;
+				screen.velocity(0).mag = 1;
+				screen.velocity(0).dir = 0;
 			}
 			k_timeout = k_timeout_max;
 		}
@@ -79,10 +79,10 @@ int main (int argc, char* argv[]) {
 		SDL_SetRenderDrawColor(graphics_renderer, 0, 0, 0, 0);
 		SDL_RenderClear(graphics_renderer); // Cover screen in a black rectangle, effectively clearing the screen
 		// Render sprites to screen
-		dest.x = static_cast<int>(screen.particles[0].x - screen.particles[0].radius);
-		dest.y = static_cast<int>(screen.particles[0].y - screen.particles[0].radius);
+		dest.x = static_cast<int>(screen.x(0) - screen.radius(0));
+		dest.y = static_cast<int>(screen.y(0) - screen.radius(0));
 		SDL_RenderCopy(graphics_renderer, ball, NULL, &dest);
-		std::cout << "\rVelocity: " << screen.particles[0].velocity.mag << " Direction: " << screen.particles[0].velocity.dir;
+		std::cout << "\rVelocity: " << screen.velocity(0).mag << " Direction: " << screen.velocity(0).dir;
 		SDL_RenderPresent(graphics_renderer); // Update screen based on changes
 		// SDL_Delay(20); // Wait 20 milliseconds, should blip 50 fps
 	}
