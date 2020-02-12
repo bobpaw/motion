@@ -6,7 +6,7 @@
 
 #ifndef MOTION_SHAPES_H
 #define MOTION_SHAPES_H
-static int DrawCircle_pts(SDL_Renderer* renderer, int cx, int cy, int x, int y) {
+static void DrawCircle_pts(SDL_Renderer* renderer, int cx, int cy, int x, int y) {
 	SDL_RenderDrawPoint(renderer, cx + x, cy + y);
 	SDL_RenderDrawPoint(renderer, cx + x, cy - y);
 	SDL_RenderDrawPoint(renderer, cx - x, cy + y);
@@ -15,10 +15,9 @@ static int DrawCircle_pts(SDL_Renderer* renderer, int cx, int cy, int x, int y) 
 	SDL_RenderDrawPoint(renderer, cx + y, cy - x);
 	SDL_RenderDrawPoint(renderer, cx - y, cy + x);
 	SDL_RenderDrawPoint(renderer, cx - y, cy - x);
-	return 0;
 }
 
-int DrawCircle(SDL_Renderer* renderer, int cx, int cy, int r) {
+void DrawCircle(SDL_Renderer* renderer, int cx, int cy, int r) {
   int x = r, y = 0, dx = 1 - 2 * r, dy  = 1, RE = 0;
   while (x >= y) {
 		DrawCircle_pts(renderer, cx, cy, x, y);
@@ -31,6 +30,5 @@ int DrawCircle(SDL_Renderer* renderer, int cx, int cy, int r) {
 			dx += 2;
 		}
   }
-  return 0;
 }
 #endif // MOTION_SHAPES_H
