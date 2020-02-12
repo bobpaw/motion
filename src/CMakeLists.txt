@@ -1,8 +1,13 @@
 set(SDL_NS "$<IF:$<BOOL:${PKG_CONFIG_FOUND}>,PkgConfig,SDL2>")
 
-add_executable(motion main.cc)
+add_executable(motion main.cc physics.h constants.h shapes.h)
 target_link_libraries(motion "${SDL_NS}::SDL2" "$<$<NOT:$<C_COMPILER_ID:MSVC>>:m>")
 
-add_executable(circle shapes.cc)
+add_executable(circle demo_shapes.cc shapes.h)
 target_link_libraries(circle "${SDL_NS}::SDL2" "$<$<NOT:$<C_COMPILER_ID:MSVC>>:m>")
 ## target_compile_features(movinga PRIVATE ...)
+
+
+# Tests
+add_executable(test_physics EXCLUDE_FROM_ALL test_physics.cc physics.h)
+target_compile_features(test_physics PRIVATE cxx_std_11)

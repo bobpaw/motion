@@ -68,3 +68,6 @@ else()
 endif()
 
 add_subdirectory(src)
+if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR GAME_BUILD_TESTING) AND BUILD_TESTING)
+add_subdirectory(test)
+endif()
