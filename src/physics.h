@@ -2,6 +2,8 @@
 #include <cmath>
 #include <cassert>
 
+#include <SFML/System/Vector2.hpp>
+
 #include "constants.h"
 
 #ifndef MOTION_PHYSICS_H
@@ -32,6 +34,11 @@ namespace phys {
 
 		double vertical () const {
 			return mag * std::sin(dir * M_PI / 180);
+		}
+
+		template <typename T>
+		operator sf::Vector2<T> () {
+			return sf::Vector2<T>(T(horizontal()), T(vertical()));
 		}
 	};
 

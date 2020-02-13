@@ -1,8 +1,8 @@
 set(SDL_NS "$<IF:$<BOOL:${PKG_CONFIG_FOUND}>,PkgConfig,SDL2>")
 
 add_executable(motion main.cc physics.h constants.h shapes.h)
-target_link_libraries(motion "${SDL_NS}::SDL2" "$<$<NOT:$<C_COMPILER_ID:MSVC>>:m>")
-# target_link_libraries(motion "$<if:VCPKG_FOUND,sfml-graphics sfml-window sfml-system,PkgConfig::SFML>")
+target_link_libraries(motion PUBLIC "${SDL_NS}::SDL2" "$<$<NOT:$<C_COMPILER_ID:MSVC>>:m>")
+target_link_libraries(motion PUBLIC "sfml-graphics sfml-window sfml-system")
 
 add_executable(single single.cc physics.h constants.h shapes.h)
 target_link_libraries(single "${SDL_NS}::SDL2" "$<$<NOT:$<C_COMPILER_ID:MSVC>>:m>")
