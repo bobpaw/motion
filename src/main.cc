@@ -29,19 +29,20 @@ int main (int argc, char* argv[]) {
 		std::cerr << "SDL couldn't initialize window! SDL_Error: " << SDL_GetError() << std::endl;
 		return -1;
 	}
+	constexpr int ball_radius = 10;
 	graphics_renderer = SDL_CreateRenderer(graphics_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC); // Use hardware acceleration and vsync
-	SDL_Texture* ball = SDL_CreateTexture(graphics_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 21, 21);
-	int k_timeout_max = 1, k_timeout = 0;
+	SDL_Texture* ball = SDL_CreateTexture(graphics_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 2 * ball_radius + 1, 2 * ball_radius + 1);
+	int k_timeout_max = 1, k_timeout_max_min = 1, k_timeout_max_max = 20, k_timeout = 0;
 	phys::Plane screen(ScreenHeight, ScreenWidth);
 	screen.makeParticle(320, 200, phys::PVector(1, 0.0));
-	screen.particles[0].radius = 10;
-	SDL_SetRenderDrawColor(graphics_renderer, 255, 255, 255, 255);
+	screen.radius(0) = ball_radius;
 	SDL_SetRenderTarget(graphics_renderer, ball);
-	for (int i = 1; i < 11; ++i) DrawCircle(graphics_renderer, 10, 10, i);
+	SDL_SetRenderDrawColor(graphics_renderer, 255, 255, 255, 255);
+	for (int i = 1; i <= ball_radius; ++i) DrawCircle(graphics_renderer, ball_radius, ball_radius, i);
 	SDL_SetRenderTarget(graphics_renderer, NULL);
-	SDL_Rect dest;
-	dest.w = 21;
-	dest.h = 21;
+	SDL_Rect dest{ 0, 0, ball_radius * 2 + 1, ball_radius * 2 + 1 };
+	SDL_SetTextureBlendMode(ball, SDL_BLENDMODE_BLEND);
+	std::uniform_int_distribution<> widthR(ball_radius, ScreenWidth - ball_radius), heightR(ball_radius, ScreenHeight - ball_radius), degreeR(0, 360);
 	while (window_quit == false) {
 		while (SDL_PollEvent(&event) != 0) { // SDL_PollEvent automatically updates key_state array
 			if (event.type == SDL_QUIT) {
@@ -53,34 +54,29 @@ int main (int argc, char* argv[]) {
 		if (k_timeout > 0) {
 			--k_timeout;
 		} else {
-			if (key_state[SDL_SCANCODE_UP] && !key_state[SDL_SCANCODE_DOWN]) {
-				screen.velocity(0).mag += 0.02;
-			} else if (!key_state[SDL_SCANCODE_UP] && key_state[SDL_SCANCODE_DOWN]) {
-				screen.velocity(0).mag -= 0.02;
-			}
-			if (key_state[SDL_SCANCODE_RIGHT] && !key_state[SDL_SCANCODE_LEFT]) {
-				screen.velocity(0).dir += 2;
-			} else if (!key_state[SDL_SCANCODE_RIGHT] && key_state[SDL_SCANCODE_LEFT]) {
-				screen.velocity(0).dir -= 2;
-			}
-			if (key_state[SDL_SCANCODE_0]) {
-				screen.velocity(0).mag = 1;
-				screen.velocity(0).dir = 0;
+			if (key_state[SDL_SCANCODE_EQUALS] && !key_state[SDL_SCANCODE_MINUS]) {
+				screen.makeParticle(widthR(random), heightR(random), phys::PVector(1, degreeR(random)));
+				screen.radius(screen.pCount() - 1) = ball_radius;
+				k_timeout_max -= (k_timeout_max > k_timeout_max_min ? 1 : 0);
+			} else {
+				k_timeout_max = k_timeout_max_max;
 			}
 			k_timeout = k_timeout_max;
 		}
 
 		// Motion
-		screen.moveParticle(0);
+		screen.moveAll();
 
 		// Clear screen
 		SDL_SetRenderDrawColor(graphics_renderer, 0, 0, 0, 0);
 		SDL_RenderClear(graphics_renderer); // Cover screen in a black rectangle, effectively clearing the screen
 		// Render sprites to screen
-		dest.x = static_cast<int>(screen.x(0) - screen.radius(0));
-		dest.y = static_cast<int>(screen.y(0) - screen.radius(0));
-		SDL_RenderCopy(graphics_renderer, ball, NULL, &dest);
-		std::cout << "\rVelocity: " << screen.velocity(0).mag << "\tDirection: " << screen.velocity(0).dir << "     ";
+
+		for (size_t i = 0; i < screen.pCount(); ++i) {
+			dest.x = static_cast<int>(screen.x(i) - screen.radius(i));
+			dest.y = static_cast<int>(screen.y(i) - screen.radius(i));
+			SDL_RenderCopy(graphics_renderer, ball, NULL, &dest);
+		}
 		SDL_RenderPresent(graphics_renderer); // Update screen based on changes
 		// SDL_Delay(20); // Wait 20 milliseconds, should blip 50 fps
 	}
