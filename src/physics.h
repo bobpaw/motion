@@ -79,7 +79,7 @@ namespace phys {
 		Plane(double h, double w, Point2D c = Point2D(0, 0)): height(h), width(w), center(c), particles() {}
 		size_t makeParticle (double x = 0, double y = 0, PVector v = PVector(0, 0)) {
 			particles.emplace_back(x, y, v);
-			return particles.size() + 1;
+			return particles.size() - 1;
 		}
 
 		void moveParticle (size_t n) {
@@ -105,6 +105,12 @@ namespace phys {
 		decltype(Particle::radius)& radius (size_t n) {
 			assert(n < particles.size());
 			return particles[n].radius;
+		}
+
+		decltype(particles.size()) pCount () const { return particles.size(); }
+
+		void moveAll () {
+			for (auto& x : particles) x.move(static_cast<int>(width - center.x), static_cast<int>(height - center.y), static_cast<int>(-center.x), static_cast<int>(-center.y));
 		}
 	};
 } // namespace phys
