@@ -61,6 +61,8 @@ else()
 error("How am I expected to find SDL2")
 endif()
 
+find_path(SFML_INCLUDE_DIR SFML/Window.hpp)
+
 # configure_file("config.h.in" "config.h" ESCAPE_QUOTES @ONLY)
 
 if ($<VERSION_GREATER_EQUAL:"${CMAKE_VERSION}","3.12">)

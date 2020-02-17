@@ -2,7 +2,7 @@
 #include <cmath>
 #include <cassert>
 
-#include <SFML/System/Vector2.hpp>
+#include <SFML/System.hpp>
 
 #include "constants.h"
 
@@ -22,6 +22,7 @@ namespace phys {
 		return x;
 	}
 
+	// Where dt is in milliseconds
 	struct PVector {
 		double mag;
 		double dir;
@@ -48,9 +49,9 @@ namespace phys {
 
 		Point2D (double x_, double y_): x(x_), y(y_) {}
 
-		void move (const PVector& velocity) {
-			x += velocity.horizontal();
-			y += velocity.vertical();
+		void move (const PVector& velocity, const sf::Time &elapsed) {
+			x += velocity.horizontal() * elapsed.asMilliseconds();
+			y += velocity.vertical() * elapsed.asMilliseconds();
 		}
 	};
 
@@ -64,15 +65,15 @@ namespace phys {
 		Particle (double x = 0.0, double y = 0.0): Particle(x, y, PVector(0.0, 0.0)) {}
 
 		// [min, max)
-		void move (int maxx, int maxy, int minx = 0, int miny = 0) {
-			Point2D::move(velocity);
+		void move (sf::Time elapsed, int maxx, int maxy, int minx = 0, int miny = 0) {
+			Point2D::move(velocity, elapsed);
 			if ((x - radius) < minx || (x + radius) >= maxx) {
 				velocity.dir = correct_deg(180 - velocity.dir);
-				Point2D::move(velocity);
+				Point2D::move(velocity, elapsed);
 			}
 			if ((y - radius) < miny || (y + radius) >= maxy) {
 				velocity.dir = correct_deg(velocity.dir * -1);
-				Point2D::move(velocity);
+				Point2D::move(velocity, elapsed);
 			}
 		}
 	};
@@ -89,8 +90,8 @@ namespace phys {
 			return particles.size() - 1;
 		}
 
-		void moveParticle (size_t n) {
-			particles[n].move(static_cast<int>(width - center.x), static_cast<int>(height - center.y), static_cast<int>(-center.x), static_cast<int>(-center.y));
+		void moveParticle (size_t n, const sf::Time &elapsed) {
+			particles[n].move(elapsed, static_cast<int>(width - center.x), static_cast<int>(height - center.y), static_cast<int>(-center.x), static_cast<int>(-center.y));
 		}
 
 		// Member particle access
@@ -116,8 +117,8 @@ namespace phys {
 
 		decltype(particles.size()) pCount () const { return particles.size(); }
 
-		void moveAll () {
-			for (auto& x : particles) x.move(static_cast<int>(width - center.x), static_cast<int>(height - center.y), static_cast<int>(-center.x), static_cast<int>(-center.y));
+		void moveAll (const sf::Time &elapsed) {
+			for (auto& x : particles) x.move(elapsed, static_cast<int>(width - center.x), static_cast<int>(height - center.y), static_cast<int>(-center.x), static_cast<int>(-center.y));
 		}
 	};
 } // namespace phys
