@@ -1,116 +1,103 @@
 #include <iostream>
 #include <random>
-#include <cmath>
 
-#include "SDL.h"
+#include <SFML/System.hpp>
+#include <SFML/Graphics.hpp>
+#include <SFML/Window.hpp>
 
-#include "shapes.h"
 #include "physics.h"
 #include "constants.h"
-#include "sdl_call.h"
 
 const int ScreenWidth = 640;
 const int ScreenHeight = 400;
 
 #undef main
 int main (int argc, char* argv[]) {
-	if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
-		std::cerr << "SDL couldn't initialize! SDL_ERROR: " << SDL_GetError() << std::endl;
-		SDL_QuitSubSystem(SDL_INIT_EVERYTHING);
-		SDL_Quit();
-		return -1;
-	}
 	std::random_device random;
-	SDL_Window* graphics_window = nullptr; // Window object
-	SDL_Renderer* graphics_renderer = nullptr; // Surface of screen
-	bool window_quit = false;
-	SDL_Event event;
-	const uint8_t* key_state = SDL_GetKeyboardState(NULL); // Get address of keystate array and assign it to keyState pointer
-	graphics_window = SDL_CreateWindow("Point Motion", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, ScreenWidth, ScreenHeight, SDL_WINDOW_SHOWN);
-	// SDL_CreateWindow(name, windowx, windowy, width, height, options
-	if (graphics_window == NULL) {
-		std::cerr << "SDL couldn't initialize window! SDL_Error: " << SDL_GetError() << std::endl;
-		SDL_QuitSubSystem(SDL_INIT_EVERYTHING);
-		SDL_Quit();
-		return -1;
-	}
-	graphics_renderer = SDL_CreateRenderer(graphics_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC); // Use hardware acceleration and vsync
-	if (graphics_renderer == NULL) SDL_ERROR(CreateRenderer);
-	SDL_Texture* ball = SDL_CreateTexture(graphics_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 21, 21);
-	if (ball == NULL) SDL_ERROR(CreateTexture);
+	sf::RenderWindow graphics_window(sf::VideoMode(ScreenWidth, ScreenHeight), "Point Motion");
+	sf::Event event;
+	sf::CircleShape ball(10);
 	int k_timeout_max = 1, k_timeout = 0;
-	double max_speed = 20.0;
+	double max_speed = 1.3;
 	phys::Plane screen(ScreenHeight, ScreenWidth);
-	screen.makeParticle(320, 200, phys::PVector(1, 0.0));
+	screen.makeParticle(320, 200, phys::PVector(0.004, 0.0));
 	screen.particles[0].radius = 10;
-	SDL_CALL(SetRenderDrawColor, graphics_renderer, 255, 255, 255, 255);
-	SDL_CALL(SetRenderTarget, graphics_renderer, ball);
-	for (int i = 1; i < 11; ++i) DrawCircle(graphics_renderer, 10, 10, i);
-	SDL_CALL(SetRenderTarget, graphics_renderer, NULL);
-	SDL_Rect ball_dest = { 0, 0, 21, 21 };
+	ball.setFillColor(sf::Color::White);
 
-	SDL_Texture* dial = SDL_CreateTexture(graphics_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 31, 31);
-	if (dial == NULL) SDL_ERROR(CreateTexture);
-	SDL_CALL(SetRenderTarget, graphics_renderer, dial);
-	DrawCircle(graphics_renderer, 15, 15, 15);
-	SDL_CALL(RenderDrawLine, graphics_renderer, 15, 0, 15, 10);
-	SDL_CALL(SetRenderTarget, graphics_renderer, NULL);
-	SDL_Rect dial_rect = { 0, ScreenHeight - 32, 31, 31 }, mag_rect = { 0, ScreenHeight - 52, 64, 20 }, mag_inner_rect = { 32, ScreenHeight - 51, 0, 18 };
-	while (window_quit == false) {
-		while (SDL_PollEvent(&event) != 0) { // SDL_PollEvent automatically updates key_state array
-			if (event.type == SDL_QUIT) {
+	sf::RenderTexture dial_texture;
+	if (!dial_texture.create(31, 31)) return -1;
+	dial_texture.clear();
+	sf::CircleShape dial_circ(15);
+	dial_circ.setFillColor(sf::Color::Black);
+	dial_circ.setOutlineColor(sf::Color::White);
+	dial_circ.setOutlineThickness(-1);
+	dial_texture.draw(dial_circ);
+	sf::VertexArray dial_line(sf::Lines, 2);
+	dial_line[0].position = sf::Vector2f(15, 0);
+	dial_line[1].position = sf::Vector2f(15, 10);
+	dial_texture.draw(dial_line);
+
+	dial_texture.display();
+	sf::Sprite dial(dial_texture.getTexture());
+	dial.setPosition(sf::Vector2f(15, ScreenHeight - 17));
+	dial.setOrigin(sf::Vector2f(15, 15));
+
+	sf::RectangleShape mag(sf::Vector2f(64, 20)), mag_inner(sf::Vector2f(30, 18));
+	mag.setPosition(0, ScreenHeight - 52);
+	mag_inner.setPosition(32, ScreenHeight - 51);
+	mag.setFillColor(sf::Color::Black);
+	mag.setOutlineColor(sf::Color::White);
+	mag.setOutlineThickness(-1);
+	mag_inner.setFillColor(sf::Color::White);
+
+	sf::Clock clock;
+	while (graphics_window.isOpen()) {
+		while (graphics_window.pollEvent(event)) { // SDL_PollEvent automatically updates key_state array
+			if (event.type == sf::Event::Closed) {
 				// Check if X button (in top right) has been pressed
-				window_quit = true;
+				graphics_window.close();
 			}
 		}
 		// Handle keyboard input
 		if (k_timeout > 0) {
 			--k_timeout;
 		} else {
-			if (key_state[SDL_SCANCODE_UP] && !key_state[SDL_SCANCODE_DOWN]) {
-				screen.velocity(0).mag += 0.02;
-			} else if (!key_state[SDL_SCANCODE_UP] && key_state[SDL_SCANCODE_DOWN]) {
-				screen.velocity(0).mag -= 0.02;
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && !sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+				screen.velocity(0).mag += 0.0002;
+			} else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+				screen.velocity(0).mag -= 0.0002;
 			}
-			if (key_state[SDL_SCANCODE_RIGHT] && !key_state[SDL_SCANCODE_LEFT]) {
-				screen.velocity(0).dir += 2;
-			} else if (!key_state[SDL_SCANCODE_RIGHT] && key_state[SDL_SCANCODE_LEFT]) {
-				screen.velocity(0).dir -= 2;
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && !sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+				screen.velocity(0).dir += 1;
+			} else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+				screen.velocity(0).dir -= 1;
 			}
-			if (key_state[SDL_SCANCODE_0]) {
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num0)) {
 				screen.velocity(0).mag = 1;
-				screen.velocity(0).dir = 0;
+				screen.velocity(0).dir = 0.1;
 			}
 			k_timeout = k_timeout_max;
 		}
 
 		// Motion
-		screen.moveParticle(0);
+		screen.moveParticle(0, clock.restart());
 
 		// Clear screen
-		SDL_CALL(SetRenderDrawColor, graphics_renderer, 0, 0, 0, 0);
-		SDL_CALL(RenderClear, graphics_renderer); // Cover screen in a black rectangle, effectively clearing the screen
+		graphics_window.clear();
+		
 		// Render sprites to screen
-		ball_dest.x = static_cast<int>(screen.x(0) - screen.radius(0));
-		ball_dest.y = static_cast<int>(screen.y(0) - screen.radius(0));
-		SDL_CALL(RenderCopy, graphics_renderer, ball, NULL, &ball_dest);
-		SDL_CALL(RenderCopyEx, graphics_renderer, dial, NULL, &dial_rect, screen.velocity(0).dir + 90, NULL, SDL_FLIP_NONE);
+		ball.setPosition(screen.x(0) - screen.radius(0), screen.y(0) - screen.radius(0));
+		dial.setRotation(screen.velocity(0).dir + 90);
+		graphics_window.draw(ball);
+		graphics_window.draw(dial);
 
-		SDL_CALL(SetRenderDrawColor, graphics_renderer, 255, 255, 255, 255);
-		SDL_CALL(RenderDrawRect, graphics_renderer, &mag_rect);
+		graphics_window.draw(mag);
 
-		mag_inner_rect.w = std::ceil(screen.velocity(0).mag / max_speed * 30);
-		SDL_CALL(RenderFillRect, graphics_renderer, &mag_inner_rect);
-		std::cout << "\rVelocity: " << screen.velocity(0).mag << "\tDirection: " << screen.velocity(0).dir << "     ";
-		SDL_RenderPresent(graphics_renderer); // Update screen based on changes
+		mag_inner.setScale(screen.velocity(0).mag / max_speed, 1);
+		graphics_window.draw(mag_inner);
+		std::cout << "\rVelocity: " << screen.velocity(0).mag << "\t\tDirection: " << screen.velocity(0).dir << "     ";
+		graphics_window.display(); // Update screen based on changes
 		// SDL_Delay(20); // Wait 20 milliseconds, should blip 50 fps
 	}
-	SDL_RenderClear(graphics_renderer);
-	SDL_DestroyRenderer(graphics_renderer);
-	SDL_DestroyWindow(graphics_window); // Destroy window; should free surface associated with screen.
-	graphics_window = nullptr;
-	graphics_renderer = nullptr;
-	SDL_QuitSubSystem(SDL_INIT_EVERYTHING);
-	SDL_Quit(); // Quit and unload SDL module
 	return 0;
 }
