@@ -11,7 +11,7 @@
 const int ScreenWidth = 640;
 const int ScreenHeight = 400;
 
-	#undef main
+#undef main
 int main (int argc, char* argv[]) {
 	std::random_device random;
 	sf::RenderWindow graphics_window(sf::VideoMode(ScreenWidth, ScreenHeight), "Motion", sf::Style::Default /*, contenxt*/ ); // Window object
