@@ -17,7 +17,7 @@ int main (int argc, char* argv[]) {
 	sf::RenderWindow graphics_window(sf::VideoMode(ScreenWidth, ScreenHeight), "Motion", sf::Style::Default /*, contenxt*/ ); // Window object
 	sf::Event event;
 	// const uint8_t* key_state = SDL_GetKeyboardState(nullptr); // Get address of keystate array and assign it to keyState pointer
-	constexpr int ball_radius = 10;
+	constexpr int ball_radius = 1;
 	int k_timeout_max = 1, k_timeout_max_min = 1, k_timeout_max_max = 20, k_timeout = 0;
 	phys::Plane screen(ScreenHeight, ScreenWidth);
 	screen.makeParticle(320, 200, phys::PVector(1, 0.0));
@@ -38,8 +38,8 @@ int main (int argc, char* argv[]) {
 		if (k_timeout > 0) {
 			--k_timeout;
 		} else {
-			if (0 /* && key_state[SDL_SCANCODE_EQUALS] && !key_state[SDL_SCANCODE_MINUS] */) {
-				screen.makeParticle(widthR(random), heightR(random), phys::PVector(1, degreeR(random)));
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Equal) && !sf::Keyboard::isKeyPressed(sf::Keyboard::Dash)) {
+				screen.makeParticle(widthR(random), heightR(random), phys::PVector(0.1, degreeR(random)));
 				screen.radius(screen.pCount() - 1) = ball_radius;
 				k_timeout_max -= (k_timeout_max > k_timeout_max_min ? 1 : 0);
 			} else {
@@ -61,6 +61,7 @@ int main (int argc, char* argv[]) {
 		}
 		graphics_window.display(); // Update screen based on changes
 		// SDL_Delay(20); // Wait 20 milliseconds, should blip 50 fps
+		sf::sleep(sf::milliseconds(1));
 	}
 	return 0;
 }
