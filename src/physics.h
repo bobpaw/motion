@@ -24,21 +24,53 @@ namespace phys {
 
 	// Where dt is in milliseconds
 	struct PVector {
-		double mag;
-		double dir;
+	private:
+		double mag_;
+		double dir_;
+		double horiz_cache;
+		double vert_cache;
 
-		PVector (double x = 0, double y = 0): mag(x), dir(y) {}
-
-		double horizontal () const {
-			return mag * std::cos(dir * M_PI / 180);
+		void update_cache () {
+			horiz_cache = mag_ * std::cos(dir_ * M_PI / 180);
+			vert_cache = mag_ * std::sin(dir_ * M_PI / 180);
 		}
 
-		double vertical () const {
-			return mag * std::sin(dir * M_PI / 180);
+	public:
+
+		PVector (double x = 0, double y = 0): mag_(x), dir_(y) { update_cache(); }
+
+		auto mag() const noexcept { return mag_; }
+		auto dir() const noexcept { return dir_; }
+
+		decltype(mag_) set_mag(decltype(mag_) x) {
+			mag_ = x;
+			update_cache();
+			return mag_;
 		}
+
+		decltype(dir_) set_dir(decltype(dir_) x) {
+			dir_ = x;
+			update_cache();
+			return dir_;
+		}
+
+		decltype(mag_) move_mag(decltype(mag_) x) {
+			mag_ += x;
+			update_cache();
+			return mag_;
+		}
+
+		decltype(dir_) move_dir(decltype(dir_) x) {
+			dir_ += x;
+			update_cache();
+			return dir_;
+		}
+
+		decltype(horiz_cache) horizontal () const noexcept { return horiz_cache; }
+		decltype(vert_cache) vertical () const noexcept { return vert_cache; }
 
 		template <typename T>
-		operator sf::Vector2<T> () {
+		operator sf::Vector2<T> () const {
 			return sf::Vector2<T>(T(horizontal()), T(vertical()));
 		}
 	};
@@ -49,9 +81,13 @@ namespace phys {
 
 		Point2D (double x_, double y_): x(x_), y(y_) {}
 
-		void move (const PVector& velocity, const sf::Time &elapsed) {
+		void move (const PVector& velocity, const sf::Time &elapsed) noexcept {
 			x += velocity.horizontal() * elapsed.asMilliseconds();
 			y += velocity.vertical() * elapsed.asMilliseconds();
+		}
+
+		double distance (const Point2D& other) const {
+			return std::sqrt((other.x - x) * (other.x - x) + (other.y - y) * (other.y - y));
 		}
 	};
 
@@ -68,11 +104,11 @@ namespace phys {
 		void move (sf::Time elapsed, int maxx, int maxy, int minx = 0, int miny = 0) {
 			Point2D::move(velocity, elapsed);
 			if ((x - radius) < minx || (x + radius) >= maxx) {
-				velocity.dir = correct_deg(180 - velocity.dir);
+				velocity.set_dir(correct_deg(180 - velocity.dir()));
 				Point2D::move(velocity, elapsed);
 			}
 			if ((y - radius) < miny || (y + radius) >= maxy) {
-				velocity.dir = correct_deg(velocity.dir * -1);
+				velocity.set_dir(correct_deg(velocity.dir() * -1));
 				Point2D::move(velocity, elapsed);
 			}
 		}
@@ -118,7 +154,16 @@ namespace phys {
 		decltype(particles.size()) pCount () const { return particles.size(); }
 
 		void moveAll (const sf::Time &elapsed) {
-			for (auto& x : particles) x.move(elapsed, static_cast<int>(width - center.x), static_cast<int>(height - center.y), static_cast<int>(-center.x), static_cast<int>(-center.y));
+			for (size_t i = 0; i < particles.size(); ++i) {
+				moveParticle(i, elapsed);
+			}
+			/*for (size_t f = 0; f < particles.size(); ++f) {
+				for (size_t o = 0; o < particles.size(); ++o) {
+					if (particles[f].distance(particles[o]) <= radius(f) + radius(o)) {
+						// collide;
+					}
+				}
+			}*/
 		}
 	};
 } // namespace phys

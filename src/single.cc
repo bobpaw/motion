@@ -63,18 +63,18 @@ int main (int argc, char* argv[]) {
 			--k_timeout;
 		} else {
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && !sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-				screen.velocity(0).mag += 0.0002;
+				screen.velocity(0).move_mag(0.0002);
 			} else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-				screen.velocity(0).mag -= 0.0002;
+				screen.velocity(0).move_mag(-0.0002);
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && !sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-				screen.velocity(0).dir += 1;
+				screen.velocity(0).move_dir(1);
 			} else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-				screen.velocity(0).dir -= 1;
+				screen.velocity(0).move_dir(-1);
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num0)) {
-				screen.velocity(0).mag = 1;
-				screen.velocity(0).dir = 0.1;
+				screen.velocity(0).set_mag(1);
+				screen.velocity(0).set_dir(0.1);
 			}
 			k_timeout = k_timeout_max;
 		}
@@ -87,17 +87,18 @@ int main (int argc, char* argv[]) {
 		
 		// Render sprites to screen
 		ball.setPosition(static_cast<float>(screen.x(0) - screen.radius(0)), static_cast<float>(screen.y(0) - screen.radius(0)));
-		dial.setRotation(static_cast<float>(screen.velocity(0).dir + 90));
+		dial.setRotation(static_cast<float>(screen.velocity(0).dir() + 90));
 		graphics_window.draw(ball);
 		graphics_window.draw(dial);
 
 		graphics_window.draw(mag);
 
-		mag_inner.setScale(static_cast<float>(screen.velocity(0).mag / max_speed), 1);
+		mag_inner.setScale(static_cast<float>(screen.velocity(0).mag() / max_speed), 1);
 		graphics_window.draw(mag_inner);
-		std::cout << "\rVelocity: " << screen.velocity(0).mag << "\t\tDirection: " << screen.velocity(0).dir << "     ";
+		std::cout << "\rVelocity: " << screen.velocity(0).mag() << "\t\tDirection: " << screen.velocity(0).dir() << "     ";
 		graphics_window.display(); // Update screen based on changes
 		// SDL_Delay(20); // Wait 20 milliseconds, should blip 50 fps
+		sf::sleep(sf::milliseconds(1));
 	}
 	return 0;
 }
