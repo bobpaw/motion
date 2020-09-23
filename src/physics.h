@@ -10,80 +10,35 @@
 #define MOTION_PHYSICS_H
 
 namespace phys {
-	double correct_rad (double x) {
-		while (x < 0) x += 2 * M_PI;
-		while (x > 2 * M_PI) x -= 2 * M_PI;
+
+	template <typename T>
+	std::enable_if_t<std::is_floating_point_v<T>,typename T> correct_rad (T x) {
+		while (x < 0) x += static_cast<T>(2 * M_PI);
+		while (x > static_cast<T>(2 * M_PI)) x -= static_cast<T>(2 * M_PI);
 		return x;
 	}
 
-	double correct_deg (double x) {
-		while (x < 0.0) x += 360;
-		while (x > 360.0) x -= 360.0;
+	template <typename T>
+	std::enable_if_t<std::is_arithmetic<T>::value, typename T> correct_deg (T x) {
+		while (x < 0.0) x += static_cast<T>(360);
+		while (x > 360.0) x -= static_cast<T>(360);
 		return x;
 	}
 
-	// Where dt is in milliseconds
-	struct PVector {
-	private:
-		double mag_;
-		double dir_;
-		double horiz_cache;
-		double vert_cache;
-
-		void update_cache () {
-			horiz_cache = mag_ * std::cos(dir_ * M_PI / 180);
-			vert_cache = mag_ * std::sin(dir_ * M_PI / 180);
-		}
-
-	public:
-
-		PVector (double x = 0, double y = 0): mag_(x), dir_(y) { update_cache(); }
-
-		auto mag() const noexcept { return mag_; }
-		auto dir() const noexcept { return dir_; }
-
-		decltype(mag_) set_mag(decltype(mag_) x) {
-			mag_ = x;
-			update_cache();
-			return mag_;
-		}
-
-		decltype(dir_) set_dir(decltype(dir_) x) {
-			dir_ = x;
-			update_cache();
-			return dir_;
-		}
-
-		decltype(mag_) move_mag(decltype(mag_) x) {
-			mag_ += x;
-			update_cache();
-			return mag_;
-		}
-
-		decltype(dir_) move_dir(decltype(dir_) x) {
-			dir_ += x;
-			update_cache();
-			return dir_;
-		}
-
-		decltype(horiz_cache) horizontal () const noexcept { return horiz_cache; }
-		decltype(vert_cache) vertical () const noexcept { return vert_cache; }
-
-		template <typename T>
-		operator sf::Vector2<T> () const {
-			return sf::Vector2<T>(T(horizontal()), T(vertical()));
-		}
-	};
+	sf::Vector2f&& PVector(float mag, float dir) {
+		sf::Vector2f ret(static_cast<float>(mag * std::cos(dir * M_PI / 180)), static_cast<float>(mag * std::sin(dir * M_PI / 180)));
+		return std::move(ret);
+	}
 
 	struct Point2D {
-		double x;
-		double y;
+		float x;
+		float y;
 
-		Point2D (double x_, double y_): x(x_), y(y_) {}
+		Point2D (float x_, float y_): x(x_), y(y_) {}
 
-		void move (const PVector& velocity, const sf::Time &elapsed) noexcept {
-			x += velocity.horizontal() * elapsed.asMilliseconds();
-			y += velocity.vertical() * elapsed.asMilliseconds();
+		void move (const sf::Vector2f& velocity, const sf::Time &elapsed) noexcept {
+			x += velocity.x * elapsed.asMilliseconds();
+			y += velocity.y * elapsed.asMilliseconds();
 		}
 
 		double distance (const Point2D& other) const {
@@ -91,37 +46,55 @@ namespace phys {
 		}
 	};
 
-	struct Particle: public Point2D {
+	float dot (const sf::Vector2f& v1, const sf::Vector2f& v2) {
+		return v1.x * v2.x + v1.y * v2.y;
+	}
+
+	float distance (const sf::Vector2f& v1) {
+		return std::sqrt(dot(v1, v1));
+	}
+
+	struct Particle {
 	public:
-		PVector velocity;
+		sf::Vector2f velocity;
+		sf::Vector2f pos;
 		double mass;
 		double radius;
 
-		Particle (double x, double y, PVector v): Point2D(x, y), velocity(v), mass(0), radius(0) {}
-		Particle (double x = 0.0, double y = 0.0): Particle(x, y, PVector(0.0, 0.0)) {}
+		Particle (float x, float y, sf::Vector2f v): pos(x, y), velocity(v), mass(0), radius(0) {}
+		Particle (float x = 0.0f, float y = 0.0f): Particle(x, y, sf::Vector2f(0.0, 0.0)) {}
 
 		// [min, max)
 		void move (sf::Time elapsed, int maxx, int maxy, int minx = 0, int miny = 0) {
-			Point2D::move(velocity, elapsed);
-			if ((x - radius) < minx || (x + radius) >= maxx) {
-				velocity.set_dir(correct_deg(180 - velocity.dir()));
-				Point2D::move(velocity, elapsed);
+			pos += velocity * static_cast<float>(elapsed.asMilliseconds());
+			if ((pos.x - radius) < minx || (pos.x + radius) >= maxx) {
+				velocity.x *= -1.0f;
+				pos += velocity * static_cast<float>(elapsed.asMilliseconds());
 			}
-			if ((y - radius) < miny || (y + radius) >= maxy) {
-				velocity.set_dir(correct_deg(velocity.dir() * -1));
-				Point2D::move(velocity, elapsed);
+			if ((pos.y - radius) < miny || (pos.y + radius) >= maxy) {
+				velocity.y *= -1.0f;
+				pos += velocity * static_cast<float>(elapsed.asMilliseconds());
 			}
+		}
+
+		// Changes both particles
+		void collide (Particle other) {
+			sf::Vector2f v1, v2;
+			v1 = velocity - dot(velocity - other.velocity, pos - other.pos) / distance(pos - other.pos) * (pos - other.pos);
+			v2 = other.velocity - dot(other.velocity - velocity, other.pos - pos) / distance(other.pos - pos) * (other.pos - pos);
+			velocity = v1;
+			other.velocity = v2;
 		}
 	};
 
 	struct Plane {
 	public:
-		double height, width;
+		float height, width;
 		Point2D center;
 
 		std::vector<Particle> particles;
-		Plane(double h, double w, Point2D c = Point2D(0, 0)): height(h), width(w), center(c), particles() {}
-		size_t makeParticle (double x = 0, double y = 0, PVector v = PVector(0, 0)) {
+		Plane(float h, float w, Point2D c = Point2D(0, 0)): height(h), width(w), center(c), particles() {}
+		size_t makeParticle (float x = 0, float y = 0, sf::Vector2f v = sf::Vector2f(0, 0)) {
 			particles.emplace_back(x, y, v);
 			return particles.size() - 1;
 		}
@@ -131,14 +104,14 @@ namespace phys {
 		}
 
 		// Member particle access
-		decltype(Particle::x)& x (size_t n) {
+		float& x (size_t n) {
 			assert(n < particles.size());
-			return particles[n].x;
+			return particles[n].pos.x;
 		}
 
-		decltype(Particle::y)& y (size_t n) {
+		float& y (size_t n) {
 			assert(n < particles.size());
-			return particles[n].y;
+			return particles[n].pos.y;
 		}
 
 		decltype(Particle::velocity)& velocity (size_t n) {

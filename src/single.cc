@@ -87,15 +87,15 @@ int main (int argc, char* argv[]) {
 		
 		// Render sprites to screen
 		ball.setPosition(static_cast<float>(screen.x(0) - screen.radius(0)), static_cast<float>(screen.y(0) - screen.radius(0)));
-		dial.setRotation(static_cast<float>(screen.velocity(0).dir() + 90));
+		dial.setRotation(std::atan(screen.velocity(0).y / screen.velocity(0).x) * M_PI / 180 + 90);
 		graphics_window.draw(ball);
 		graphics_window.draw(dial);
 
 		graphics_window.draw(mag);
 
-		mag_inner.setScale(static_cast<float>(screen.velocity(0).mag() / max_speed), 1);
+		mag_inner.setScale(static_cast<float>(phys::distance(screen.velocity(0)) / max_speed), 1);
 		graphics_window.draw(mag_inner);
-		std::cout << "\rVelocity: " << screen.velocity(0).mag() << "\t\tDirection: " << screen.velocity(0).dir() << "     ";
+		std::cout << "\rVelocity: " << phys::distance(screen.velocity(0)) << "\t\tDirection: " << std::atan(screen.velocity(0).y / screen.velocity(0).x) * M_PI / 180 + 90 << "     ";
 		graphics_window.display(); // Update screen based on changes
 		// SDL_Delay(20); // Wait 20 milliseconds, should blip 50 fps
 		sf::sleep(sf::milliseconds(1));
