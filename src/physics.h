@@ -30,6 +30,10 @@ namespace phys {
 		return std::move(ret);
 	}
 
+	sf::Vector2f PVector(const sf::Vector2f& v) {
+		return sf::Vector2f(std::hypot(v.x, v.y), std::atan2(v.y, v.x) * 180.0f / static_cast<float>(M_PI));
+	}
+
 	struct Point2D {
 		float x;
 		float y;
@@ -41,8 +45,8 @@ namespace phys {
 			y += velocity.y * elapsed.asMilliseconds();
 		}
 
-		double distance (const Point2D& other) const {
-			return std::sqrt((other.x - x) * (other.x - x) + (other.y - y) * (other.y - y));
+		float distance (const Point2D& other) const {
+			return std::hypot(other.x - x, other.y - y);
 		}
 	};
 
@@ -51,21 +55,22 @@ namespace phys {
 	}
 
 	float distance (const sf::Vector2f& v1) {
-		return std::sqrt(dot(v1, v1));
+		return std::hypot(v1.x, v1.y);
 	}
 
 	struct Particle {
 	public:
 		sf::Vector2f velocity;
 		sf::Vector2f pos;
-		double mass;
-		double radius;
+		float mass;
+		float radius;
 
 		Particle (float x, float y, sf::Vector2f v): pos(x, y), velocity(v), mass(0), radius(0) {}
 		Particle (float x = 0.0f, float y = 0.0f): Particle(x, y, sf::Vector2f(0.0, 0.0)) {}
 
 		// [min, max)
 		void move (sf::Time elapsed, int maxx, int maxy, int minx = 0, int miny = 0) {
+			// sf::Vector2f projected_pos = pos + velocity * static_cast<float>(elapsed.asMilliseconds())
 			pos += velocity * static_cast<float>(elapsed.asMilliseconds());
 			if ((pos.x - radius) < minx || (pos.x + radius) >= maxx) {
 				velocity.x *= -1.0f;
@@ -78,12 +83,15 @@ namespace phys {
 		}
 
 		// Changes both particles
-		void collide (Particle other) {
+		void collide (Particle& other) {
+			/*
 			sf::Vector2f v1, v2;
 			v1 = velocity - dot(velocity - other.velocity, pos - other.pos) / distance(pos - other.pos) * (pos - other.pos);
 			v2 = other.velocity - dot(other.velocity - velocity, other.pos - pos) / distance(other.pos - pos) * (other.pos - pos);
 			velocity = v1;
 			other.velocity = v2;
+			*/
+			std::swap(velocity, other.velocity);
 		}
 	};
 

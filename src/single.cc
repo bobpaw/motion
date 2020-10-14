@@ -42,13 +42,16 @@ int main (int argc, char* argv[]) {
 	dial.setPosition(sf::Vector2f(15, ScreenHeight - 17));
 	dial.setOrigin(sf::Vector2f(15, 15));
 
-	sf::RectangleShape mag(sf::Vector2f(64, 20)), mag_inner(sf::Vector2f(30, 18));
+	sf::RectangleShape mag(sf::Vector2f(64, 20)), mag_inner(sf::Vector2f(62, 18));
 	mag.setPosition(0, ScreenHeight - 52);
-	mag_inner.setPosition(32, ScreenHeight - 51);
+	mag_inner.setPosition(1, ScreenHeight - 51);
 	mag.setFillColor(sf::Color::Black);
 	mag.setOutlineColor(sf::Color::White);
 	mag.setOutlineThickness(-1);
 	mag_inner.setFillColor(sf::Color::White);
+
+	sf::VertexArray compass(sf::Lines, 2);
+	compass[0].position = sf::Vector2f(graphics_window.getSize().x / 2, graphics_window.getSize().y / 2);
 
 	sf::Clock clock;
 	while (graphics_window.isOpen()) {
@@ -63,18 +66,18 @@ int main (int argc, char* argv[]) {
 			--k_timeout;
 		} else {
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && !sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-				screen.velocity(0).move_mag(0.0002);
+				screen.velocity(0).y -= 0.002f;
 			} else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-				screen.velocity(0).move_mag(-0.0002);
+				screen.velocity(0).y += 0.002f;
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && !sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-				screen.velocity(0).move_dir(1);
+				screen.velocity(0).x += 0.002f;
 			} else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-				screen.velocity(0).move_dir(-1);
+				screen.velocity(0).x -= 0.002f;
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num0)) {
-				screen.velocity(0).set_mag(1);
-				screen.velocity(0).set_dir(0.1);
+				screen.velocity(0).x = 0.004f;
+				screen.velocity(0).y = 0;
 			}
 			k_timeout = k_timeout_max;
 		}
@@ -86,16 +89,20 @@ int main (int argc, char* argv[]) {
 		graphics_window.clear();
 		
 		// Render sprites to screen
-		ball.setPosition(static_cast<float>(screen.x(0) - screen.radius(0)), static_cast<float>(screen.y(0) - screen.radius(0)));
-		dial.setRotation(std::atan(screen.velocity(0).y / screen.velocity(0).x) * M_PI / 180 + 90);
+		ball.setPosition(screen.x(0) - screen.radius(0), screen.y(0) - screen.radius(0));
+		dial.setRotation(phys::PVector(screen.velocity(0)).y + 90.0f);
 		graphics_window.draw(ball);
 		graphics_window.draw(dial);
 
 		graphics_window.draw(mag);
 
-		mag_inner.setScale(static_cast<float>(phys::distance(screen.velocity(0)) / max_speed), 1);
+		mag_inner.setScale(phys::distance(screen.velocity(0)) / max_speed, 1);
 		graphics_window.draw(mag_inner);
-		std::cout << "\rVelocity: " << phys::distance(screen.velocity(0)) << "\t\tDirection: " << std::atan(screen.velocity(0).y / screen.velocity(0).x) * M_PI / 180 + 90 << "     ";
+
+		compass[1].position = screen.particles[0].pos;
+		graphics_window.draw(compass);
+
+		std::cout << "\rVelocity: " << phys::distance(screen.velocity(0)) << "\t\tDirection: " << phys::PVector(screen.velocity(0)).y << "     ";
 		graphics_window.display(); // Update screen based on changes
 		// SDL_Delay(20); // Wait 20 milliseconds, should blip 50 fps
 		sf::sleep(sf::milliseconds(1));
