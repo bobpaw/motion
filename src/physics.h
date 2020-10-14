@@ -26,7 +26,7 @@ namespace phys {
 	}
 
 	sf::Vector2f&& PVector(float mag, float dir) {
-		sf::Vector2f ret(static_cast<float>(mag * std::cos(dir * M_PI / 180)), static_cast<float>(mag * std::sin(dir * M_PI / 180)));
+		sf::Vector2f ret(mag * std::cos(dir * static_cast<float>(M_PI) / 180.f), mag * std::sin(dir * static_cast<float>(M_PI) / 180.f));
 		return std::move(ret);
 	}
 
@@ -97,11 +97,11 @@ namespace phys {
 
 	struct Plane {
 	public:
-		float height, width;
+		unsigned int height, width;
 		Point2D center;
 
 		std::vector<Particle> particles;
-		Plane(float h, float w, Point2D c = Point2D(0, 0)): height(h), width(w), center(c), particles() {}
+		Plane(unsigned int h, unsigned int w, Point2D c = Point2D(0, 0)): height(h), width(w), center(c), particles() {}
 		size_t makeParticle (float x = 0, float y = 0, sf::Vector2f v = sf::Vector2f(0, 0)) {
 			particles.emplace_back(x, y, v);
 			return particles.size() - 1;
