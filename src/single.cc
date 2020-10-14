@@ -18,7 +18,7 @@ int main (int argc, char* argv[]) {
 	sf::Event event;
 	sf::CircleShape ball(10);
 	int k_timeout_max = 1, k_timeout = 0;
-	double max_speed = 1.3;
+	float max_speed = 1.3f;
 	phys::Plane screen(ScreenHeight, ScreenWidth);
 	screen.makeParticle(320, 200, phys::PVector(0.004, 0.0));
 	screen.particles[0].radius = 10;
@@ -51,7 +51,7 @@ int main (int argc, char* argv[]) {
 	mag_inner.setFillColor(sf::Color::White);
 
 	sf::VertexArray compass(sf::Lines, 2);
-	compass[0].position = sf::Vector2f(graphics_window.getSize().x / 2, graphics_window.getSize().y / 2);
+	compass[0].position = sf::Vector2f(graphics_window.getSize().x / 2.f, graphics_window.getSize().y / 2.f);
 
 	sf::Clock clock;
 	while (graphics_window.isOpen()) {
@@ -96,7 +96,7 @@ int main (int argc, char* argv[]) {
 
 		graphics_window.draw(mag);
 
-		mag_inner.setScale(phys::distance(screen.velocity(0)) / max_speed, 1);
+		mag_inner.setScale(phys::distance(screen.velocity(0)) / max_speed, 1.f);
 		graphics_window.draw(mag_inner);
 
 		compass[1].position = screen.particles[0].pos;
