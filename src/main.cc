@@ -13,19 +13,19 @@ const int ScreenHeight = 400;
 
 #undef main
 int main (int argc, char* argv[]) {
-	std::random_device random;
+	std::mt19937 random_engine(std::random_device{}());
 	sf::RenderWindow graphics_window(sf::VideoMode(ScreenWidth, ScreenHeight), "Motion", sf::Style::Default /*, contenxt*/ ); // Window object
 	sf::Event event;
 	// const uint8_t* key_state = SDL_GetKeyboardState(nullptr); // Get address of keystate array and assign it to keyState pointer
-	constexpr int ball_radius = 1;
-	int k_timeout_max = 1, k_timeout_max_min = 1, k_timeout_max_max = 20, k_timeout = 0;
+	constexpr int ball_radius = 10;
+	int k_timeout_max = 1, k_timeout_max_min = 1, k_timeout_max_max = 40, k_timeout = 0;
 	phys::Plane screen(ScreenHeight, ScreenWidth);
-	screen.makeParticle(320, 200, phys::PVector(1, 0.0));
+	screen.makeParticle(320, 200, phys::PVector(.5f, 0.0));
 	screen.radius(0) = ball_radius;
 	sf::CircleShape ball(ball_radius);
 	ball.setFillColor(sf::Color::White);
 	// ball.transform something something turn on blending
-	std::uniform_int_distribution<> widthR(ball_radius, ScreenWidth - ball_radius), heightR(ball_radius, ScreenHeight - ball_radius), degreeR(0, 360);
+	std::uniform_real_distribution<float> widthR(ball_radius, ScreenWidth - ball_radius), heightR(ball_radius, ScreenHeight - ball_radius), degreeR(0, 360);
 	sf::Clock clock;
 	while (graphics_window.isOpen()) {
 		while (graphics_window.pollEvent(event)) { // SDL_PollEvent automatically updates key_state array
@@ -38,10 +38,13 @@ int main (int argc, char* argv[]) {
 		if (k_timeout > 0) {
 			--k_timeout;
 		} else {
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Equal) && !sf::Keyboard::isKeyPressed(sf::Keyboard::Dash)) {
-				screen.makeParticle(widthR(random), heightR(random), phys::PVector(0.1, degreeR(random)));
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Equal) && !sf::Keyboard::isKeyPressed(sf::Keyboard::Dash) && screen.particles.size() < 200) {
+				float x = widthR(random_engine), y = heightR(random_engine), dir = degreeR(random_engine);
+				screen.makeParticle(x, y, phys::PVector(.5f, dir));
 				screen.radius(screen.pCount() - 1) = ball_radius;
 				k_timeout_max -= (k_timeout_max > k_timeout_max_min ? 1 : 0);
+			} else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Equal) && sf::Keyboard::isKeyPressed(sf::Keyboard::Dash) && screen.particles.size() > 1) {
+				screen.particles.pop_back();
 			} else {
 				k_timeout_max = k_timeout_max_max;
 			}
