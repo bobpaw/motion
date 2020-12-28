@@ -82,6 +82,10 @@ namespace phys {
 			}
 		}
 
+		float distance (const Particle& other) const {
+			return std::hypot(other.pos.x - pos.x, other.pos.y - pos.y);
+		}
+
 		// Changes both particles
 		void collide (Particle& other) {
 			/*
@@ -138,13 +142,14 @@ namespace phys {
 			for (size_t i = 0; i < particles.size(); ++i) {
 				moveParticle(i, elapsed);
 			}
-			/*for (size_t f = 0; f < particles.size(); ++f) {
-				for (size_t o = 0; o < particles.size(); ++o) {
+			for (size_t f = 0; f < particles.size() - 1; ++f) {
+				for (size_t o = f + 1; o < particles.size(); ++o) {
 					if (particles[f].distance(particles[o]) <= radius(f) + radius(o)) {
 						// collide;
+						particles[f].collide(particles[o]);
 					}
 				}
-			}*/
+			}
 		}
 	};
 } // namespace phys
