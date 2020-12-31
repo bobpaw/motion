@@ -20,8 +20,7 @@ int main (int argc, char* argv[]) {
 	constexpr int ball_radius = 5;
 	int k_timeout_max = 1, k_timeout_max_min = 1, k_timeout_max_max = 40, k_timeout = 0;
 	phys::Plane screen(ScreenHeight, ScreenWidth);
-	screen.makeParticle(320, 200, phys::PVector(.1f, 0.0));
-	screen.radius(0) = ball_radius;
+	screen.makeParticle(320, 200, ball_radius, phys::PVector(.1f, 0.0));
 	sf::CircleShape ball(ball_radius);
 	ball.setFillColor(sf::Color::White);
 	// ball.transform something something turn on blending
@@ -40,8 +39,7 @@ int main (int argc, char* argv[]) {
 		} else {
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Equal) && !sf::Keyboard::isKeyPressed(sf::Keyboard::Dash) && screen.particles.size() < 200) {
 				float x = widthR(random_engine), y = heightR(random_engine), dir = degreeR(random_engine);
-				screen.makeParticle(x, y, phys::PVector(.25f, dir));
-				screen.radius(screen.pCount() - 1) = ball_radius;
+				screen.makeParticle(x, y, ball_radius, phys::PVector(.25f, dir));
 				k_timeout_max -= (k_timeout_max > k_timeout_max_min ? 1 : 0);
 			} else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Equal) && sf::Keyboard::isKeyPressed(sf::Keyboard::Dash) && screen.particles.size() > 1) {
 				screen.particles.pop_back();

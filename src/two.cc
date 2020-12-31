@@ -19,10 +19,8 @@ int main (int argc, char* argv[]) {
 	constexpr int ball_radius = 10;
 	phys::Plane screen(ScreenHeight, ScreenWidth);
 	
-	screen.makeParticle(140, 200, phys::PVector(.1f, 0.0));
-	screen.radius(0) = ball_radius;
-	screen.makeParticle(500, 205, phys::PVector(.1f, 180.0));
-	screen.radius(1) = ball_radius;
+	screen.makeParticle(140, 200, ball_radius, phys::PVector(.1f, 0.0));
+	screen.makeParticle(500, 205, ball_radius, phys::PVector(.1f, 180.0));
 
 	sf::CircleShape ball(ball_radius);
 	ball.setFillColor(sf::Color::White);

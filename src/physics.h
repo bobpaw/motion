@@ -34,22 +34,6 @@ namespace phys {
 		return sf::Vector2f(std::hypot(v.x, v.y), std::atan2(v.y, v.x) * 180.0f / static_cast<float>(M_PI));
 	}
 
-	struct Point2D {
-		float x;
-		float y;
-
-		Point2D (float x_, float y_): x(x_), y(y_) {}
-
-		void move (const sf::Vector2f& velocity, const sf::Time &elapsed) noexcept {
-			x += velocity.x * elapsed.asMilliseconds();
-			y += velocity.y * elapsed.asMilliseconds();
-		}
-
-		float distance (const Point2D& other) const {
-			return std::hypot(other.x - x, other.y - y);
-		}
-	};
-
 	float dot (const sf::Vector2f& v1, const sf::Vector2f& v2) {
 		return v1.x * v2.x + v1.y * v2.y;
 	}
@@ -65,8 +49,8 @@ namespace phys {
 		float mass;
 		float radius;
 
-		Particle (float x, float y, sf::Vector2f v): pos(x, y), velocity(v), mass(0), radius(0) {}
-		Particle (float x = 0.0f, float y = 0.0f): Particle(x, y, sf::Vector2f(0.0, 0.0)) {}
+		Particle (float x, float y, float r, sf::Vector2f v, float m = 0.f): pos(x, y), velocity(v), mass(m), radius(r) {}
+		Particle (float x = 0.0f, float y = 0.0f, float r = 0.f): Particle(x, y, r, sf::Vector2f(0.0, 0.0)) {}
 
 		// [min, max)
 		void move (sf::Time elapsed, int maxx, int maxy, int minx = 0, int miny = 0) {
@@ -99,12 +83,13 @@ namespace phys {
 	struct Plane {
 	public:
 		unsigned int height, width;
-		Point2D center;
+		sf::Vector2f center;
 
 		std::vector<Particle> particles;
-		Plane(unsigned int h, unsigned int w, Point2D c = Point2D(0, 0)): height(h), width(w), center(c), particles() {}
-		size_t makeParticle (float x = 0, float y = 0, sf::Vector2f v = sf::Vector2f(0, 0)) {
-			particles.emplace_back(x, y, v);
+		Plane(unsigned int h, unsigned int w, sf::Vector2f c = sf::Vector2f(0.f, 0.f)): height(h), width(w), center(c), particles() {}
+		
+		size_t makeParticle (float x = 0.f, float y = 0.f, float r = 0.f, sf::Vector2f v = sf::Vector2f(0, 0), float m = 0.f) {
+			particles.emplace_back(x, y, r, v, m);
 			return particles.size() - 1;
 		}
 
