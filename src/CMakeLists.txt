@@ -4,6 +4,7 @@ include_directories("${SFML_INCLUDE_DIR}")
 add_executable(motion main.cc physics.h constants.h)
 # target_link_libraries(motion PUBLIC "${SDL_NS}::SDL2" "$<$<NOT:$<C_COMPILER_ID:MSVC>>:m>")
 target_link_libraries(motion PUBLIC sfml-graphics sfml-window sfml-system)
+add_custom_command(TARGET motion PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/src/FreeSans.ttf $<TARGET_FILE_DIR:motion>/FreeSans.ttf)
 
 add_executable(single single.cc physics.h constants.h)
 target_link_libraries(single PUBLIC sfml-graphics sfml-window sfml-system)

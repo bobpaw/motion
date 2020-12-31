@@ -18,7 +18,7 @@ int main (int argc, char* argv[]) {
 	sf::Event event;
 	// const uint8_t* key_state = SDL_GetKeyboardState(nullptr); // Get address of keystate array and assign it to keyState pointer
 	constexpr int ball_radius = 5;
-	int k_timeout_max = 1, k_timeout_max_min = 1, k_timeout_max_max = 40, k_timeout = 0;
+	int k_timeout_max = 1, k_timeout_max_min = 1, k_timeout_max_max = 4, k_timeout = 0;
 	phys::Plane screen(ScreenHeight, ScreenWidth);
 	screen.makeParticle(320, 200, ball_radius, phys::PVector(.1f, 0.0));
 	sf::CircleShape ball(ball_radius);
@@ -26,6 +26,14 @@ int main (int argc, char* argv[]) {
 	// ball.transform something something turn on blending
 	std::uniform_real_distribution<float> widthR(ball_radius, ScreenWidth - ball_radius), heightR(ball_radius, ScreenHeight - ball_radius), degreeR(0, 360);
 	sf::Clock clock;
+
+	sf::Font freesans;
+	freesans.loadFromFile("./FreeSans.ttf");
+
+	sf::Text pCount("Particles: 1", freesans);
+	pCount.setCharacterSize(16);
+
+
 	while (graphics_window.isOpen()) {
 		while (graphics_window.pollEvent(event)) { // SDL_PollEvent automatically updates key_state array
 			if (event.type == sf::Event::Closed) {
@@ -41,8 +49,10 @@ int main (int argc, char* argv[]) {
 				float x = widthR(random_engine), y = heightR(random_engine), dir = degreeR(random_engine);
 				screen.makeParticle(x, y, ball_radius, phys::PVector(.25f, dir));
 				k_timeout_max -= (k_timeout_max > k_timeout_max_min ? 1 : 0);
+				pCount.setString("Particles: " + std::to_string(screen.pCount()));
 			} else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Equal) && sf::Keyboard::isKeyPressed(sf::Keyboard::Dash) && screen.particles.size() > 1) {
 				screen.particles.pop_back();
+				pCount.setString("Particles: " + std::to_string(screen.pCount()));
 			} else {
 				k_timeout_max = k_timeout_max_max;
 			}
@@ -54,7 +64,9 @@ int main (int argc, char* argv[]) {
 
 		// Clear screen
 		graphics_window.clear();
-			
+		
+		graphics_window.draw(pCount);
+
 		// Render sprites to screen
 		for (size_t i = 0; i < screen.pCount(); ++i) {
 			ball.setPosition(screen.x(i) - screen.radius(i), screen.y(i) - screen.radius(i));
@@ -62,7 +74,7 @@ int main (int argc, char* argv[]) {
 		}
 		graphics_window.display(); // Update screen based on changes
 		// SDL_Delay(20); // Wait 20 milliseconds, should blip 50 fps
-		sf::sleep(sf::milliseconds(1));
+		sf::sleep(sf::milliseconds(10));
 	}
 	return 0;
 }
