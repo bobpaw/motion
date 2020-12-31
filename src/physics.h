@@ -88,14 +88,11 @@ namespace phys {
 
 		// Changes both particles
 		void collide (Particle& other) {
-			/*
 			sf::Vector2f v1, v2;
-			v1 = velocity - dot(velocity - other.velocity, pos - other.pos) / distance(pos - other.pos) * (pos - other.pos);
-			v2 = other.velocity - dot(other.velocity - velocity, other.pos - pos) / distance(other.pos - pos) * (other.pos - pos);
+			v1 = velocity - dot(velocity - other.velocity, pos - other.pos) / dot(pos - other.pos, pos - other.pos) * (pos - other.pos);
+			v2 = other.velocity - dot(other.velocity - velocity, other.pos - pos) / dot(other.pos - pos, other.pos - pos) * (other.pos - pos);
 			velocity = v1;
 			other.velocity = v2;
-			*/
-			std::swap(velocity, other.velocity);
 		}
 	};
 
@@ -139,17 +136,14 @@ namespace phys {
 		decltype(particles.size()) pCount () const { return particles.size(); }
 
 		void moveAll (const sf::Time &elapsed) {
-			for (size_t i = 0; i < particles.size(); ++i) {
+			for (size_t i = 0; i < particles.size(); ++i)
 				moveParticle(i, elapsed);
-			}
-			for (size_t f = 0; f < particles.size() - 1; ++f) {
-				for (size_t o = f + 1; o < particles.size(); ++o) {
+			for (size_t f = 0; f < particles.size() - 1; ++f)
+				for (size_t o = f + 1; o < particles.size(); ++o)
 					if (particles[f].distance(particles[o]) <= radius(f) + radius(o)) {
 						// collide;
 						particles[f].collide(particles[o]);
 					}
-				}
-			}
 		}
 	};
 } // namespace phys

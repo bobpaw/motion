@@ -17,10 +17,10 @@ int main (int argc, char* argv[]) {
 	sf::RenderWindow graphics_window(sf::VideoMode(ScreenWidth, ScreenHeight), "Motion", sf::Style::Default /*, contenxt*/ ); // Window object
 	sf::Event event;
 	// const uint8_t* key_state = SDL_GetKeyboardState(nullptr); // Get address of keystate array and assign it to keyState pointer
-	constexpr int ball_radius = 10;
+	constexpr int ball_radius = 5;
 	int k_timeout_max = 1, k_timeout_max_min = 1, k_timeout_max_max = 40, k_timeout = 0;
 	phys::Plane screen(ScreenHeight, ScreenWidth);
-	screen.makeParticle(320, 200, phys::PVector(.5f, 0.0));
+	screen.makeParticle(320, 200, phys::PVector(.1f, 0.0));
 	screen.radius(0) = ball_radius;
 	sf::CircleShape ball(ball_radius);
 	ball.setFillColor(sf::Color::White);
@@ -40,7 +40,7 @@ int main (int argc, char* argv[]) {
 		} else {
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Equal) && !sf::Keyboard::isKeyPressed(sf::Keyboard::Dash) && screen.particles.size() < 200) {
 				float x = widthR(random_engine), y = heightR(random_engine), dir = degreeR(random_engine);
-				screen.makeParticle(x, y, phys::PVector(.5f, dir));
+				screen.makeParticle(x, y, phys::PVector(.25f, dir));
 				screen.radius(screen.pCount() - 1) = ball_radius;
 				k_timeout_max -= (k_timeout_max > k_timeout_max_min ? 1 : 0);
 			} else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Equal) && sf::Keyboard::isKeyPressed(sf::Keyboard::Dash) && screen.particles.size() > 1) {
