@@ -20,8 +20,7 @@ int main (int argc, char* argv[]) {
 	int k_timeout_max = 1, k_timeout = 0;
 	float max_speed = 1.3f;
 	phys::Plane screen(ScreenHeight, ScreenWidth);
-	screen.makeParticle(320, 200, phys::PVector(0.004, 0.0));
-	screen.particles[0].radius = 10;
+	screen.makeParticle(320, 200, 10, phys::PVector(0.004f, 0.0));
 	ball.setFillColor(sf::Color::White);
 
 	sf::RenderTexture dial_texture;
