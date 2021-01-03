@@ -11,6 +11,11 @@
 
 namespace phys {
 
+	template <typename dest, typename src>
+	sf::Vector2<dest> ConvertVector2(sf::Vector2<src> v) {
+		return sf::Vector2<dest>(static_cast<dest>(v.x), static_cast<dest>(v.y));
+	}
+
 	template <typename T>
 	std::enable_if_t<std::is_floating_point_v<T>,typename T> correct_rad (T x) {
 		while (x < 0) x += static_cast<T>(2 * M_PI);

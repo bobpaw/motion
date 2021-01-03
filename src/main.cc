@@ -15,6 +15,7 @@ const int ScreenHeight = 400;
 int main (int argc, char* argv[]) {
 	std::mt19937 random_engine(std::random_device{}());
 	sf::RenderWindow graphics_window(sf::VideoMode(ScreenWidth, ScreenHeight), "Motion", sf::Style::Default /*, contenxt*/ ); // Window object
+	graphics_window.setVerticalSyncEnabled(true);
 	sf::Event event;
 	// const uint8_t* key_state = SDL_GetKeyboardState(nullptr); // Get address of keystate array and assign it to keyState pointer
 	constexpr int ball_radius = 5;
