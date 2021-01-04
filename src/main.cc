@@ -27,7 +27,7 @@ int main (int argc, char* argv[]) {
 	sf::Clock clock, keyclock;
 	sf::Event event;
 
-	// Texty
+	// Texty stuff
 	sf::Font freesans;
 	freesans.loadFromFile("./FreeSans.ttf");
 
