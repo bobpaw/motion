@@ -24,17 +24,16 @@ int main (int argc, char* argv[]) {
 	// Our one ball shape
 	sf::CircleShape ball(ball_radius);
 
-	sf::Clock clock;
+	sf::Clock clock, keyclock;
 	sf::Event event;
 	
+	int keyclock_max = 400;
+
 	// Texty
 	sf::Font freesans;
 	freesans.loadFromFile("./FreeSans.ttf");
 
 	sf::Text pCount("Particles: 1", freesans, 16);
-
-	// Awkward timers so holding keys down doesn't get handled too fast; probably do with an sf::Clock eventually
-	int k_timeout_max = 1, k_timeout_max_min = 1, k_timeout_max_max = 4, k_timeout = 0;
 	
 	phys::Plane screen(ScreenHeight, ScreenWidth);
 	screen.makeParticle(320, 200, ball_radius, phys::PVector(.1f, 0.0));
@@ -48,22 +47,18 @@ int main (int argc, char* argv[]) {
 		}
 
 		// Handle keys that can be held down
-		if (k_timeout > 0) {
-			--k_timeout;
-		} else {
+		
+		if (keyclock.getElapsedTime().asMilliseconds() >= 100) {
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Equal) && !sf::Keyboard::isKeyPressed(sf::Keyboard::Dash) && screen.particles.size() < 200) {
 				// The random engine doesn't work correctly if they're inline calls in makeParticle
 				float x = widthR(random_engine), y = heightR(random_engine), dir = degreeR(random_engine);
 				screen.makeParticle(x, y, ball_radius, phys::PVector(.25f, dir));
-				k_timeout_max -= (k_timeout_max > k_timeout_max_min ? 1 : 0);
 				pCount.setString("Particles: " + std::to_string(screen.pCount()));
 			} else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Equal) && sf::Keyboard::isKeyPressed(sf::Keyboard::Dash) && screen.particles.size() > 1) {
 				screen.particles.pop_back();
 				pCount.setString("Particles: " + std::to_string(screen.pCount()));
-			} else {
-				k_timeout_max = k_timeout_max_max;
 			}
-			k_timeout = k_timeout_max;
+			keyclock.restart();
 		}
 
 		// Motion
