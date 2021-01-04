@@ -1,90 +1,79 @@
 #include <iostream>
 #include <random>
 
-#include "SDL.h"
+#include <SFML/System.hpp>
+#include <SFML/Graphics.hpp>
 
-#include "shapes.h"
 #include "physics.h"
 
 #include "constants.h"
 
-const int ScreenWidth = 640;
-const int ScreenHeight = 400;
+constexpr int ScreenWidth = 640;
+constexpr int ScreenHeight = 400;
+constexpr int ball_radius = 5;
 
-	#undef main
+#undef main
 int main (int argc, char* argv[]) {
-	if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
-		std::cerr << "SDL couldn't initialize! SDL_ERROR: " << SDL_GetError() << std::endl;
-		return -1;
-	}
-	std::random_device random;
-	SDL_Window* graphics_window = nullptr; // Window object
-	SDL_Renderer* graphics_renderer = nullptr; // Surface of screen
-	bool window_quit = false;
-	SDL_Event event;
-	const uint8_t* key_state = SDL_GetKeyboardState(nullptr); // Get address of keystate array and assign it to keyState pointer
-	graphics_window = SDL_CreateWindow("Motion", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, ScreenWidth, ScreenHeight, SDL_WINDOW_SHOWN);
-	// SDL_CreateWindow(name, windowx, windowy, width, height, options
-	if (graphics_window == nullptr) {
-		std::cerr << "SDL couldn't initialize window! SDL_Error: " << SDL_GetError() << std::endl;
-		return -1;
-	}
-	constexpr int ball_radius = 10;
-	graphics_renderer = SDL_CreateRenderer(graphics_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC); // Use hardware acceleration and vsync
-	SDL_Texture* ball = SDL_CreateTexture(graphics_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 2 * ball_radius + 1, 2 * ball_radius + 1);
-	int k_timeout_max = 1, k_timeout_max_min = 1, k_timeout_max_max = 20, k_timeout = 0;
+	std::mt19937 random_engine(std::random_device{}());
+	std::uniform_real_distribution<float> widthR(ball_radius, ScreenWidth - ball_radius),
+		heightR(ball_radius, ScreenHeight - ball_radius), degreeR(0, 360);
+
+	sf::RenderWindow graphics_window(sf::VideoMode(ScreenWidth, ScreenHeight), "Motion", sf::Style::Default, sf::ContextSettings(0, 0, 8));
+	graphics_window.setVerticalSyncEnabled(true);
+
+	// Our one ball shape
+	sf::CircleShape ball(ball_radius);
+
+	sf::Clock clock, keyclock;
+	sf::Event event;
+
+	// Texty
+	sf::Font freesans;
+	freesans.loadFromFile("./FreeSans.ttf");
+
+	sf::Text pCount("Particles: 1", freesans, 16);
+	
 	phys::Plane screen(ScreenHeight, ScreenWidth);
-	screen.makeParticle(320, 200, phys::PVector(1, 0.0));
-	screen.radius(0) = ball_radius;
-	SDL_SetRenderTarget(graphics_renderer, ball);
-	SDL_SetRenderDrawColor(graphics_renderer, 255, 255, 255, 255);
-	for (int i = 1; i <= ball_radius; ++i) DrawCircle(graphics_renderer, ball_radius, ball_radius, i);
-	SDL_SetRenderTarget(graphics_renderer, NULL);
-	SDL_Rect dest{ 0, 0, ball_radius * 2 + 1, ball_radius * 2 + 1 };
-	SDL_SetTextureBlendMode(ball, SDL_BLENDMODE_BLEND);
-	std::uniform_int_distribution<> widthR(ball_radius, ScreenWidth - ball_radius), heightR(ball_radius, ScreenHeight - ball_radius), degreeR(0, 360);
-	while (window_quit == false) {
-		while (SDL_PollEvent(&event) != 0) { // SDL_PollEvent automatically updates key_state array
-			if (event.type == SDL_QUIT) {
-				// Check if X button (in top right) has been pressed
-				window_quit = true;
+	screen.makeParticle(320, 200, ball_radius, phys::PVector(.1f, 0.0));
+
+	clock.restart();
+	while (graphics_window.isOpen()) {
+		while (graphics_window.pollEvent(event)) {
+			if (event.type == sf::Event::Closed) {
+				graphics_window.close();
 			}
 		}
-		// Handle keyboard input
-		if (k_timeout > 0) {
-			--k_timeout;
-		} else {
-			if (key_state[SDL_SCANCODE_EQUALS] && !key_state[SDL_SCANCODE_MINUS]) {
-				screen.makeParticle(widthR(random), heightR(random), phys::PVector(1, degreeR(random)));
-				screen.radius(screen.pCount() - 1) = ball_radius;
-				k_timeout_max -= (k_timeout_max > k_timeout_max_min ? 1 : 0);
-			} else {
-				k_timeout_max = k_timeout_max_max;
+
+		// Handle keys that can be held down
+		
+		if (keyclock.getElapsedTime().asMilliseconds() >= 100) {
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Equal) && !sf::Keyboard::isKeyPressed(sf::Keyboard::Dash) && screen.particles.size() < 200) {
+				// The random engine doesn't work correctly if they're inline calls in makeParticle
+				float x = widthR(random_engine), y = heightR(random_engine), dir = degreeR(random_engine);
+				screen.makeParticle(x, y, ball_radius, phys::PVector(.25f, dir));
+				pCount.setString("Particles: " + std::to_string(screen.pCount()));
+			} else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Equal) && sf::Keyboard::isKeyPressed(sf::Keyboard::Dash) && screen.particles.size() > 1) {
+				screen.particles.pop_back();
+				pCount.setString("Particles: " + std::to_string(screen.pCount()));
 			}
-			k_timeout = k_timeout_max;
+			keyclock.restart();
 		}
 
 		// Motion
-		screen.moveAll();
+		screen.moveAll(clock.restart());
 
 		// Clear screen
-		SDL_SetRenderDrawColor(graphics_renderer, 0, 0, 0, 0);
-		SDL_RenderClear(graphics_renderer); // Cover screen in a black rectangle, effectively clearing the screen
-		// Render sprites to screen
+		graphics_window.clear();
+		
+		graphics_window.draw(pCount);
 
+		// Render sprites to screen
 		for (size_t i = 0; i < screen.pCount(); ++i) {
-			dest.x = static_cast<int>(screen.x(i) - screen.radius(i));
-			dest.y = static_cast<int>(screen.y(i) - screen.radius(i));
-			SDL_RenderCopy(graphics_renderer, ball, NULL, &dest);
+			ball.setPosition(screen.x(i) - screen.radius(i), screen.y(i) - screen.radius(i));
+			graphics_window.draw(ball);
 		}
-		SDL_RenderPresent(graphics_renderer); // Update screen based on changes
-		// SDL_Delay(20); // Wait 20 milliseconds, should blip 50 fps
+		graphics_window.display();
+		sf::sleep(sf::milliseconds(10)); // A number high enough that CPU doesn't overtake graphics output
 	}
-	SDL_RenderClear(graphics_renderer);
-	SDL_DestroyRenderer(graphics_renderer);
-	SDL_DestroyWindow(graphics_window); // Destroy window; should free surface associated with screen.
-	graphics_window = nullptr;
-	graphics_renderer = nullptr;
-	SDL_Quit(); // Quit and unload SDL module
 	return 0;
 }
