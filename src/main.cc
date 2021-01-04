@@ -26,8 +26,6 @@ int main (int argc, char* argv[]) {
 
 	sf::Clock clock, keyclock;
 	sf::Event event;
-	
-	int keyclock_max = 400;
 
 	// Texty
 	sf::Font freesans;
