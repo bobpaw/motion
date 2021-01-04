@@ -36,14 +36,6 @@ include(CheckCXXSymbolExists)
 
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
-check_include_file_cxx(iostream HAVE_IOSTREAM)
-check_include_file_cxx(string HAVE_STRING)
-check_include_file_cxx(vector HAVE_VECTOR)
-check_include_file(stdio.h HAVE_STDIO_H)
-
-if() # No standard library
-endif()
-
 if (CMAKE_TOOLCHAIN_FILE MATCHES ".*vcpkg.cmake$")
   set(VCPKG_FOUND TRUE)
 else()
@@ -52,13 +44,11 @@ endif()
 find_package(PkgConfig)
 
 if (VCPKG_FOUND)
-find_package(SDL2 CONFIG REQUIRED)
 find_package(SFML CONFIG COMPONENTS graphics window system REQUIRED)
 elseif (PKG_CONFIG_FOUND)
-pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
 pkg_check_modules(SFML REQUIRED IMPORTED_TARGET sfml-graphics sfml-window sfml-system)
 else()
-error("How am I expected to find SDL2")
+error("How am I expected to find SFML")
 endif()
 
 find_path(SFML_INCLUDE_DIR SFML/Window.hpp)
