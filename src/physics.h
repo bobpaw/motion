@@ -1,6 +1,7 @@
 #include <vector>
 #include <cmath>
 #include <cassert>
+#include <type_traits>
 
 #include <SFML/System.hpp>
 
@@ -17,14 +18,14 @@ namespace phys {
 	}
 
 	template <typename T>
-	std::enable_if_t<std::is_floating_point_v<T>,typename T> correct_rad (T x) {
+	std::enable_if_t<std::is_floating_point_v<T>, T> correct_rad (T x) {
 		while (x < 0) x += static_cast<T>(2 * M_PI);
 		while (x > static_cast<T>(2 * M_PI)) x -= static_cast<T>(2 * M_PI);
 		return x;
 	}
 
 	template <typename T>
-	std::enable_if_t<std::is_arithmetic<T>::value, typename T> correct_deg (T x) {
+	std::enable_if_t<std::is_arithmetic<T>::value, T> correct_deg (T x) {
 		while (x < 0.0) x += static_cast<T>(360);
 		while (x > 360.0) x -= static_cast<T>(360);
 		return x;

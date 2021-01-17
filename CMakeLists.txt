@@ -10,7 +10,7 @@ endif()
 
 project(Motion VERSION 0.0 LANGUAGES C CXX)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 set(default_build_type "Release")
