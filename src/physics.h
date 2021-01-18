@@ -88,11 +88,11 @@ namespace phys {
 
 	struct Plane {
 	public:
-		unsigned int height, width;
+		float height, width;
 		sf::Vector2f center;
 
 		std::vector<Particle> particles;
-		Plane(unsigned int h, unsigned int w, sf::Vector2f c = sf::Vector2f(0.f, 0.f)): height(h), width(w), center(c), particles() {}
+		Plane(float h, float w, sf::Vector2f c = sf::Vector2f(0.f, 0.f)): height(h), width(w), center(c), particles() {}
 		
 		size_t makeParticle (float x = 0.f, float y = 0.f, float r = 0.f, sf::Vector2f v = sf::Vector2f(0, 0), float m = 0.f) {
 			particles.emplace_back(x, y, r, v, m);
