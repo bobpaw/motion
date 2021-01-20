@@ -13,6 +13,8 @@ namespace phys {
 		struct Particle {
 			sf::Vector2f velocity;
 			float radius;
+
+			Particle(sf::Vector2f v, float r): velocity(v), radius(r) {}
 		};
 		std::vector<Particle> particles;
 		sf::VertexArray vertices;
@@ -20,11 +22,10 @@ namespace phys {
 		ParticleSystem(float w, float h):
 			bounds(0.f, 0.f, w, h),
 			particles(),
-			vertices() {}
+			vertices(sf::Quads) {}
 		void move_particle(sf::Time elapsed, size_t index);
 		void collide_particles(size_t i, size_t j);
 		void update(const sf::Time& elapsed);
-		size_t makeParticle(float x = 0.f, float y = 0.f, float r = 0.f, sf::Vector2f v = sf::Vector2f(0, 0));
 		size_t makeParticle(sf::Vector2f pos = {0, 0}, float r = 0.f, sf::Vector2f v = {0, 0});
 	private:
 

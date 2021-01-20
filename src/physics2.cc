@@ -82,4 +82,14 @@ namespace phys {
 				if (fast_infringe(f, o) && slow_infringe(f, o))
 					collide_particles(f, o);
 	}
+
+	size_t ParticleSystem::makeParticle(sf::Vector2f pos = {0, 0}, float r = 0.f, sf::Vector2f v = {0, 0}) {
+		particles.emplace_back(v, r);
+		// FIXME: Possibly set texCoords
+		vertices.append(pos + sf::Vector2f(-r, -r));
+		vertices.append(pos + sf::Vector2f(r, -r));
+		vertices.append(pos + sf::Vector2f(r, r));
+		vertices.append(pos + sf::Vector2f(-r, r));
+		return particles.size() - 1;
+	}
 }
