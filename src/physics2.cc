@@ -1,5 +1,8 @@
 #include "physics2.h"
 
+#include <cassert>
+
+#define _USE_MATH_DEFINES
 #include <cmath>
 
 namespace {
@@ -21,7 +24,13 @@ namespace {
 		return std::hypot(v1.x, v1.y);
 	}
 }
+
 namespace phys {
+	sf::Vector2f PVector(float mag, float dir) {
+		return sf::Vector2f(std::cos(dir * static_cast<float>(M_PI) / 180.f),
+			std::sin(dir * static_cast<float>(M_PI) / 180.f)) * mag;
+	}
+
 	sf::CircleShape ParticleSystem::circle_shape(30);
 
 	sf::Vector2f ParticleSystem::get_center(size_t index) {
@@ -30,7 +39,7 @@ namespace phys {
 			(vertices[index].position.y + vertices[index + 2].position.y) / 2);
 	}
 
-	void ParticleSystem::move_particle(sf::Time elapsed, size_t index) {
+	void ParticleSystem::move_particle(size_t index, sf::Time elapsed) {
 		sf::Vector2f displacement = particles[index].velocity
 			* static_cast<float>(elapsed.asMilliseconds());
 		for (size_t i = 0; i < 4; ++i) {
@@ -42,7 +51,7 @@ namespace phys {
 			particles[index].velocity.x *= -1.0f;
 		if (first.y < bounds.top || third.y >= bounds.top + bounds.height)
 			particles[index].velocity.y *= -1.0f;
-		move_particle(elapsed, index);
+		move_particle(index, elapsed);
 	}
 
 	void ParticleSystem::collide_particles(size_t i, size_t j) {
@@ -76,7 +85,7 @@ namespace phys {
 
 	void ParticleSystem::update(const sf::Time& elapsed) {
 		for (size_t i = 0; i < particles.size(); ++i)
-			move_particle(elapsed, i);
+			move_particle(i, elapsed);
 		for (size_t f = 0; f < particles.size() - 1; ++f)
 			for (size_t o = f + 1; o < particles.size() - 1; ++o)
 				if (fast_infringe(f, o) && slow_infringe(f, o))
@@ -91,5 +100,12 @@ namespace phys {
 		vertices.append(pos + sf::Vector2f(r, r));
 		vertices.append(pos + sf::Vector2f(-r, r));
 		return particles.size() - 1;
+	}
+
+	size_t ParticleSystem::removeParticle(size_t n) {
+		assert(particles.size() >= n);
+		particles.resize(particles.size() - n);
+		vertices.resize(vertices.getVertexCount() - n * 4);
+		return particles.size();
 	}
 }
