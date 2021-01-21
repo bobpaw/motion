@@ -21,14 +21,19 @@ namespace phys {
 		std::vector<Particle> particles;
 		sf::VertexArray vertices;
 		sf::FloatRect bounds;
+		float default_radius_;
 		
 		void move_particle(size_t index, sf::Time elapsed);
+
+		// Helper functions for collide_particles
+		bool fast_infringe(size_t i, size_t j);
+		bool slow_infringe(size_t i, size_t j);
+
 		void collide_particles(size_t i, size_t j);
 
 		sf::Vector2f get_center(size_t index);
+
 		static sf::CircleShape circle_shape;
-		bool fast_infringe(size_t i, size_t j);
-		bool slow_infringe(size_t i, size_t j);
 
 		virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
 			// apply the entity's transform -- combine it with the one that was passed by the caller
@@ -43,14 +48,22 @@ namespace phys {
 			target.draw(vertices, states);
 		}
 	public:
-		ParticleSystem(float w, float h):
-			bounds(0.f, 0.f, w, h),
-			particles(),
-			vertices(sf::Quads) {}
+		ParticleSystem(float w, float h, float r = 1.f): default_radius_(r),
+			bounds(0.f, 0.f, w, h), particles(), vertices(sf::Quads) {
+			assert(default_radius_ > 0.f);
+		}
 
 		void update(const sf::Time& elapsed);
-		size_t makeParticle(sf::Vector2f pos = {0, 0}, float r = 0.f, sf::Vector2f v = {0, 0});
-		size_t removeParticle(size_t n = 1);
+		size_t add_particle(sf::Vector2f pos = {0, 0}, sf::Vector2f v = {0, 0}, float r = -1.f);
+		size_t remove_particle(size_t n = 1);
+
+		const float& default_radius() const noexcept {
+			return default_radius_;
+		}
+
+		float& default_radius() noexcept {
+			return default_radius_;
+		}
 	};
 }
 #endif // MOTION_PHYSICS2_H_

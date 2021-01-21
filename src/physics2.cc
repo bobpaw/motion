@@ -92,7 +92,8 @@ namespace phys {
 					collide_particles(f, o);
 	}
 
-	size_t ParticleSystem::makeParticle(sf::Vector2f pos = {0, 0}, float r = 0.f, sf::Vector2f v = {0, 0}) {
+	size_t ParticleSystem::add_particle(sf::Vector2f pos, sf::Vector2f v, float r) {
+		if (r <= 0) r = default_radius_;
 		particles.emplace_back(v, r);
 		// FIXME: Possibly set texCoords
 		vertices.append(pos + sf::Vector2f(-r, -r));
@@ -102,7 +103,7 @@ namespace phys {
 		return particles.size() - 1;
 	}
 
-	size_t ParticleSystem::removeParticle(size_t n) {
+	size_t ParticleSystem::remove_particle(size_t n) {
 		assert(particles.size() >= n);
 		particles.resize(particles.size() - n);
 		vertices.resize(vertices.getVertexCount() - n * 4);
