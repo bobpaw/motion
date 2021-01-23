@@ -11,12 +11,13 @@
 namespace phys {
 	sf::Vector2f PVector(float mag, float dir);
 
-	class ParticleSystem: sf::Drawable, sf::Transformable {
+	class ParticleSystem: public sf::Drawable, public sf::Transformable {
+	protected:
 		struct Particle {
 			sf::Vector2f velocity;
 			float radius;
 
-			Particle(sf::Vector2f v, float r): velocity(v), radius(r) {}
+			Particle(sf::Vector2f v = {0, 0}, float r = 1): velocity(v), radius(r) {}
 		};
 		std::vector<Particle> particles;
 		sf::VertexArray vertices;
@@ -26,21 +27,23 @@ namespace phys {
 		void move_particle(size_t index, sf::Time elapsed);
 
 		// Helper functions for collide_particles
-		bool fast_infringe(size_t i, size_t j);
-		bool slow_infringe(size_t i, size_t j);
+		bool fast_infringe(size_t i, size_t j) const;
+		bool slow_infringe(size_t i, size_t j) const;
 
 		void collide_particles(size_t i, size_t j);
 
-		sf::Vector2f get_center(size_t index);
+		static sf::RenderTexture circle_shape;
+		static struct StaticConstructor {
+			StaticConstructor ();
+		} _StaticConstructor;
 
-		static sf::CircleShape circle_shape;
-
+	private:
 		virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
 			// apply the entity's transform -- combine it with the one that was passed by the caller
 			states.transform *= getTransform(); // getTransform() is defined by sf::Transformable
 
 			// apply the texture
-			states.texture = circle_shape.getTexture();
+			states.texture = &circle_shape.getTexture();
 
 			// you may also override states.shader or states.blendMode if you want
 
@@ -64,6 +67,13 @@ namespace phys {
 		float& default_radius() noexcept {
 			return default_radius_;
 		}
+
+		size_t pCount() const {
+			return particles.size();
+		}
+
+		sf::Vector2f get_center(size_t index) const;
+		void move_particle(size_t index, sf::Vector2f displacement);
 	};
 }
 #endif // MOTION_PHYSICS2_H_

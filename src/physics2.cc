@@ -1,9 +1,9 @@
 #include "physics2.h"
 
 #include <cassert>
-
-#define _USE_MATH_DEFINES
 #include <cmath>
+
+#include "constants.h"
 
 namespace {
 	template <typename T>
@@ -31,43 +31,62 @@ namespace phys {
 			std::sin(dir * static_cast<float>(M_PI) / 180.f)) * mag;
 	}
 
-	sf::CircleShape ParticleSystem::circle_shape(30);
+	sf::RenderTexture ParticleSystem::circle_shape;
+	ParticleSystem::StaticConstructor::StaticConstructor () {
+		circle_shape.create(61, 61);
+		sf::CircleShape shape(30);
+		circle_shape.draw(shape);
+		circle_shape.display();
+	}
 
-	sf::Vector2f ParticleSystem::get_center(size_t index) {
+	ParticleSystem::StaticConstructor ParticleSystem::_StaticConstructor;
+
+	sf::Vector2f ParticleSystem::get_center(size_t index) const {
 		return sf::Vector2f(
-			(vertices[index].position.x + vertices[index + 2].position.x) / 2,
-			(vertices[index].position.y + vertices[index + 2].position.y) / 2);
+			(vertices[index * 4].position.x + vertices[index * 4 + 2].position.x) / 2,
+			(vertices[index * 4].position.y + vertices[index * 4 + 2].position.y) / 2);
+	}
+
+	void ParticleSystem::move_particle(size_t index, sf::Vector2f displacement) {
+		for (size_t i = 0; i < 4; ++i) {
+			vertices[index * 4 + i].position += displacement;
+		}
 	}
 
 	void ParticleSystem::move_particle(size_t index, sf::Time elapsed) {
 		sf::Vector2f displacement = particles[index].velocity
 			* static_cast<float>(elapsed.asMilliseconds());
-		for (size_t i = 0; i < 4; ++i) {
-			vertices[index + i].position += displacement;
+		
+		move_particle(index, displacement);
+
+		const sf::Vector2f& first = vertices[index * 4].position, & third = vertices[index * 4 + 2].position;
+		bool redo = false;
+		if (first.x < bounds.left || third.x >= bounds.left + bounds.width) {
+			particles[index].velocity.x *= -1.0f;
+			displacement.x *= -1.0f;
+			redo = true;
+		}
+		if (first.y < bounds.top || third.y >= bounds.top + bounds.height) {
+			particles[index].velocity.y *= -1.0f;
+			displacement.y *= -1.0f;
+			redo = true;
 		}
 
-		const sf::Vector2f &first = vertices[index].position, & third = vertices[index + 2].position;
-		if (first.x < bounds.left || third.x >= bounds.left + bounds.width)
-			particles[index].velocity.x *= -1.0f;
-		if (first.y < bounds.top || third.y >= bounds.top + bounds.height)
-			particles[index].velocity.y *= -1.0f;
-		move_particle(index, elapsed);
+		if (redo) move_particle(index, displacement);
 	}
 
 	void ParticleSystem::collide_particles(size_t i, size_t j) {
-		sf::Vector2f v1, v2;
 		sf::Vector2f pos1 = get_center(i), pos2 = get_center(j);
-		Particle& alpha = particles[i], & beta = particles[j];
-		v1 = alpha.velocity - dot(alpha.velocity - beta.velocity, pos1 - pos2)
+		sf::Vector2f v1 = particles[i].velocity, v2 = particles[j].velocity;
+		particles[i].velocity = v1 - dot(v1 - v2, pos1 - pos2)
 			/ dot(pos1 - pos2, pos1 - pos2) * (pos1 - pos2);
-		v2 = beta.velocity - dot(beta.velocity - alpha.velocity, pos2 - pos1)
+		particles[j].velocity = v2 - dot(v2 - v1, pos2 - pos1)
 			/ dot(pos2 - pos1, pos2 - pos1) * (pos2 - pos1);
-		alpha.velocity = v1;
-		beta.velocity = v2;
 	}
 
-	bool ParticleSystem::fast_infringe(size_t i, size_t j) {
+	bool ParticleSystem::fast_infringe(size_t i, size_t j) const {
 #ifndef FAST_FAST
+		i *= 4; j *= 4;
 		sf::FloatRect r1(vertices[i].position, vertices[i + 2].position - vertices[i].position),
 			r2(vertices[j].position, vertices[j + 2].position - vertices[j].position);
 		return r1.intersects(r2);
@@ -77,9 +96,9 @@ namespace phys {
 #endif
 	}
 
-	bool ParticleSystem::slow_infringe(size_t i, size_t j) {
+	bool ParticleSystem::slow_infringe(size_t i, size_t j) const {
 		// FIXME: It's possible the <= should be a <
-		return distance(vertices[j].position - vertices[i].position)
+		return distance(vertices[j * 4].position - vertices[i * 4].position)
 			<= particles[i].radius + particles[j].radius;
 	}
 
@@ -96,10 +115,11 @@ namespace phys {
 		if (r <= 0) r = default_radius_;
 		particles.emplace_back(v, r);
 		// FIXME: Possibly set texCoords
-		vertices.append(pos + sf::Vector2f(-r, -r));
-		vertices.append(pos + sf::Vector2f(r, -r));
-		vertices.append(pos + sf::Vector2f(r, r));
-		vertices.append(pos + sf::Vector2f(-r, r));
+		vertices.append({pos + sf::Vector2f(-r, -r), sf::Vector2f(0.f, 0.f)});
+		vertices.append({pos + sf::Vector2f(r, -r), sf::Vector2f(61.f, 0.f)});
+		vertices.append({pos + sf::Vector2f(r, r), sf::Vector2f(61.f, 61.f)});
+		vertices.append({pos + sf::Vector2f(-r, r), sf::Vector2f(0.f, 61.f)});
+
 		return particles.size() - 1;
 	}
 
