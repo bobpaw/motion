@@ -72,6 +72,7 @@ namespace phys {
 			return particles.size();
 		}
 
+		void set_color(size_t index, const sf::Color& c);
 		sf::Vector2f get_center(size_t index) const;
 		void move_particle(size_t index, sf::Vector2f displacement);
 	};

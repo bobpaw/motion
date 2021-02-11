@@ -23,6 +23,10 @@ namespace {
 	static float distance(const sf::Vector2f& v1) {
 		return std::hypot(v1.x, v1.y);
 	}
+
+	static float distance(const sf::Vector2f& v1, const sf::Vector2f& v2) {
+		return std::hypot(v2.x - v1.x, v2.y - v1.y);
+	}
 }
 
 namespace phys {
@@ -42,9 +46,9 @@ namespace phys {
 	ParticleSystem::StaticConstructor ParticleSystem::_StaticConstructor;
 
 	sf::Vector2f ParticleSystem::get_center(size_t index) const {
-		return sf::Vector2f(
-			(vertices[index * 4].position.x + vertices[index * 4 + 2].position.x) / 2,
-			(vertices[index * 4].position.y + vertices[index * 4 + 2].position.y) / 2);
+		sf::Vector2f center(particles[index].radius, particles[index].radius);
+		center += vertices[index * 4].position;
+		return center;
 	}
 
 	void ParticleSystem::move_particle(size_t index, sf::Vector2f displacement) {
@@ -60,45 +64,40 @@ namespace phys {
 		move_particle(index, displacement);
 
 		const sf::Vector2f& first = vertices[index * 4].position, & third = vertices[index * 4 + 2].position;
-		bool redo = false;
+
+		displacement *= 0.f;
 		if (first.x < bounds.left || third.x >= bounds.left + bounds.width) {
 			particles[index].velocity.x *= -1.0f;
-			displacement.x *= -1.0f;
-			redo = true;
+			displacement.x = 2.0f * (first.x < bounds.left ?
+				bounds.left - first.x : bounds.left + bounds.width - third.x);
 		}
 		if (first.y < bounds.top || third.y >= bounds.top + bounds.height) {
 			particles[index].velocity.y *= -1.0f;
-			displacement.y *= -1.0f;
-			redo = true;
+			displacement.y = 2.0f * (first.y < bounds.top ?
+				bounds.top - first.y : bounds.top + bounds.height - third.y);
 		}
 
-		if (redo) move_particle(index, displacement);
+		// If neither case passes, displacement will be 0, 0.
+		move_particle(index, displacement);
 	}
 
 	void ParticleSystem::collide_particles(size_t i, size_t j) {
-		sf::Vector2f pos1 = get_center(i), pos2 = get_center(j);
 		sf::Vector2f v1 = particles[i].velocity, v2 = particles[j].velocity;
-		particles[i].velocity = v1 - dot(v1 - v2, pos1 - pos2)
-			/ dot(pos1 - pos2, pos1 - pos2) * (pos1 - pos2);
-		particles[j].velocity = v2 - dot(v2 - v1, pos2 - pos1)
-			/ dot(pos2 - pos1, pos2 - pos1) * (pos2 - pos1);
+		sf::Vector2f pos_diff = vertices[j * 4].position - vertices[i * 4].position;
+		float dot_product = dot(pos_diff, pos_diff);
+		particles[i].velocity = v1 - dot(v1 - v2, pos_diff) / dot_product * pos_diff;
+		particles[j].velocity = v2 - dot(v2 - v1, -pos_diff) / dot_product * -pos_diff;
 	}
 
 	bool ParticleSystem::fast_infringe(size_t i, size_t j) const {
-#ifndef FAST_FAST
-		i *= 4; j *= 4;
-		sf::FloatRect r1(vertices[i].position, vertices[i + 2].position - vertices[i].position),
-			r2(vertices[j].position, vertices[j + 2].position - vertices[j].position);
+		sf::FloatRect intersection, r1(vertices[i * 4].position, {particles[i].radius * 2.f, particles[i].radius * 2.f}),
+			r2(vertices[j * 4].position, {particles[j].radius * 2.f, particles[j].radius * 2.f});
 		return r1.intersects(r2);
-#else
-		sf::Vector2f& p1 = vertices[i].position, & p2 = vertices[j].position;
-		return /* boolean expression */
-#endif
 	}
 
 	bool ParticleSystem::slow_infringe(size_t i, size_t j) const {
 		// FIXME: It's possible the <= should be a <
-		return distance(vertices[j * 4].position - vertices[i * 4].position)
+		return distance(get_center(i), get_center(j))
 			<= particles[i].radius + particles[j].radius;
 	}
 
@@ -106,9 +105,15 @@ namespace phys {
 		for (size_t i = 0; i < particles.size(); ++i)
 			move_particle(i, elapsed);
 		for (size_t f = 0; f < particles.size() - 1; ++f)
-			for (size_t o = f + 1; o < particles.size() - 1; ++o)
+			for (size_t o = f + 1; o < particles.size(); ++o)
 				if (fast_infringe(f, o) && slow_infringe(f, o))
 					collide_particles(f, o);
+	}
+
+	void ParticleSystem::set_color(size_t index, const sf::Color& c) {
+		assert(index < particles.size());
+		for (size_t i = 0; i < 4; ++i)
+			vertices[index * 4 + i].color = c;
 	}
 
 	size_t ParticleSystem::add_particle(sf::Vector2f pos, sf::Vector2f v, float r) {
