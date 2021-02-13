@@ -6,7 +6,6 @@
 #include <SFML/Window.hpp>
 
 #include "physics.h"
-#include "constants.h"
 
 const int ScreenWidth = 640;
 const int ScreenHeight = 400;
@@ -16,12 +15,10 @@ int main (int argc, char* argv[]) {
 	std::random_device random;
 	sf::RenderWindow graphics_window(sf::VideoMode(ScreenWidth, ScreenHeight), "Point Motion");
 	sf::Event event;
-	sf::CircleShape ball(10);
 	int k_timeout_max = 1, k_timeout = 0;
 	float max_speed = 1.3f;
-	phys::Plane screen(ScreenHeight, ScreenWidth);
-	screen.makeParticle(320, 200, 10, phys::PVector(0.004f, 0.0));
-	ball.setFillColor(sf::Color::White);
+	phys::ParticleSystem screen(ScreenWidth, ScreenHeight, 10.f);
+	screen.add_particle({320, 200}, phys::PVector(0.004f, 0.0));
 
 	sf::RenderTexture dial_texture;
 	if (!dial_texture.create(31, 31)) return -1;
@@ -65,14 +62,14 @@ int main (int argc, char* argv[]) {
 			--k_timeout;
 		} else {
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && !sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-				screen.velocity(0).y -= 0.002f;
+				screen.velocity(0).y -= 0.02f;
 			} else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-				screen.velocity(0).y += 0.002f;
+				screen.velocity(0).y += 0.02f;
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && !sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-				screen.velocity(0).x += 0.002f;
+				screen.velocity(0).x += 0.02f;
 			} else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-				screen.velocity(0).x -= 0.002f;
+				screen.velocity(0).x -= 0.02f;
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num0)) {
 				screen.velocity(0).x = 0.004f;
@@ -82,29 +79,29 @@ int main (int argc, char* argv[]) {
 		}
 
 		// Motion
-		screen.moveParticle(0, clock.restart());
+		screen.update(clock.restart());
 
 		// Clear screen
 		graphics_window.clear();
-		
+
 		// Render sprites to screen
-		ball.setPosition(screen.x(0) - screen.radius(0), screen.y(0) - screen.radius(0));
-		dial.setRotation(phys::PVector(screen.velocity(0)).y + 90.0f);
-		graphics_window.draw(ball);
+		sf::Vector2f pvector = phys::ToPVector(screen.velocity(0));
+		dial.setRotation(pvector.y + 90.0f);
+		graphics_window.draw(screen);
 		graphics_window.draw(dial);
 
 		graphics_window.draw(mag);
 
-		mag_inner.setScale(phys::distance(screen.velocity(0)) / max_speed, 1.f);
+		mag_inner.setScale(pvector.x / max_speed, 1.f);
 		graphics_window.draw(mag_inner);
 
-		compass[1].position = screen.particles[0].pos;
+		compass[1].position = screen.get_center(0);
 		graphics_window.draw(compass);
 
-		std::cout << "\rVelocity: " << phys::distance(screen.velocity(0)) << "\t\tDirection: " << phys::PVector(screen.velocity(0)).y << "     ";
+		std::cout << "\rVelocity: " << pvector.x << "\t\tDirection: " << pvector.y << "     ";
 		graphics_window.display(); // Update screen based on changes
 		// SDL_Delay(20); // Wait 20 milliseconds, should blip 50 fps
-		sf::sleep(sf::milliseconds(1));
+		sf::sleep(sf::milliseconds(10));
 	}
 	return 0;
 }

@@ -1,12 +1,13 @@
 #include <iostream>
 #include <random>
+#include <filesystem>
 
 #include <SFML/System.hpp>
 #include <SFML/Graphics.hpp>
 
 #include "physics.h"
 
-#include "constants.h"
+namespace fs = std::filesystem;
 
 constexpr int ScreenWidth = 640;
 constexpr int ScreenHeight = 400;
@@ -18,62 +19,82 @@ int main (int argc, char* argv[]) {
 	std::uniform_real_distribution<float> widthR(ball_radius, ScreenWidth - ball_radius),
 		heightR(ball_radius, ScreenHeight - ball_radius), degreeR(0, 360);
 
-	sf::RenderWindow graphics_window(sf::VideoMode(ScreenWidth, ScreenHeight), "Motion", sf::Style::Default, sf::ContextSettings(0, 0, 8));
+	sf::RenderWindow graphics_window(sf::VideoMode(ScreenWidth, ScreenHeight), "Motion", sf::Style::Default, sf::ContextSettings(0, 0, 0));
 	graphics_window.setVerticalSyncEnabled(true);
-
-	// Our one ball shape
-	sf::CircleShape ball(ball_radius);
 
 	sf::Clock clock, keyclock;
 	sf::Event event;
 
 	// Texty stuff
 	sf::Font freesans;
-	freesans.loadFromFile("./FreeSans.ttf");
+	freesans.loadFromFile((fs::path(argv[0]).parent_path() / "FreeSans.ttf").string());
 
 	sf::Text pCount("Particles: 1", freesans, 16);
+
+	phys::ParticleSystem screen(ScreenWidth, ScreenHeight, 5);
+	screen.add_particle({320, 200}, phys::PVector(.1f, 0.0));
 	
-	phys::Plane screen(ScreenHeight, ScreenWidth);
-	screen.makeParticle(320, 200, ball_radius, phys::PVector(.1f, 0.0));
+	int held_times = 0;
+
+	// Some subroutines that'll be members when the app becomes a class
+	auto add_particle = [&]() {
+		if (screen.pCount() < 200) {
+			float x = widthR(random_engine), y = heightR(random_engine), dir = degreeR(random_engine);
+			screen.add_particle({x, y}, phys::PVector(.25f, dir));
+			pCount.setString("Particles: " + std::to_string(screen.pCount()) + " H ct: " + std::to_string(held_times));
+		}
+	};
+
+	auto remove_particle = [&]() {
+		if (screen.pCount() > 1) {
+			screen.remove_particle();
+			pCount.setString("Particles: " + std::to_string(screen.pCount()));
+		}
+	};
 
 	clock.restart();
 	while (graphics_window.isOpen()) {
 		while (graphics_window.pollEvent(event)) {
 			if (event.type == sf::Event::Closed) {
 				graphics_window.close();
+			} else if (event.type == sf::Event::KeyReleased) {
+				switch (event.key.code) {
+					case sf::Keyboard::Equal:
+						add_particle();
+						break;
+					case sf::Keyboard::Dash:
+						remove_particle();
+						break;
+				}
 			}
 		}
 
 		// Handle keys that can be held down
-		
-		if (keyclock.getElapsedTime().asMilliseconds() >= 100) {
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Equal) && !sf::Keyboard::isKeyPressed(sf::Keyboard::Dash) && screen.particles.size() < 200) {
-				// The random engine doesn't work correctly if they're inline calls in makeParticle
-				float x = widthR(random_engine), y = heightR(random_engine), dir = degreeR(random_engine);
-				screen.makeParticle(x, y, ball_radius, phys::PVector(.25f, dir));
-				pCount.setString("Particles: " + std::to_string(screen.pCount()));
-			} else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Equal) && sf::Keyboard::isKeyPressed(sf::Keyboard::Dash) && screen.particles.size() > 1) {
-				screen.particles.pop_back();
-				pCount.setString("Particles: " + std::to_string(screen.pCount()));
+
+		/*
+		if (keyclock.getElapsedTime().asMilliseconds() >= std::max(400 - held_times * 20, 100)) {
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Equal) && !sf::Keyboard::isKeyPressed(sf::Keyboard::Dash)) {
+				add_particle();
+			} else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Equal) && sf::Keyboard::isKeyPressed(sf::Keyboard::Dash)) {
+				remove_particle();
 			}
+			++held_times;
 			keyclock.restart();
-		}
+		} */
 
 		// Motion
-		screen.moveAll(clock.restart());
+		screen.update(clock.restart());
 
 		// Clear screen
 		graphics_window.clear();
-		
+
 		graphics_window.draw(pCount);
 
 		// Render sprites to screen
-		for (size_t i = 0; i < screen.pCount(); ++i) {
-			ball.setPosition(screen.x(i) - screen.radius(i), screen.y(i) - screen.radius(i));
-			graphics_window.draw(ball);
-		}
+		graphics_window.draw(screen);
+
 		graphics_window.display();
-		sf::sleep(sf::milliseconds(10)); // A number high enough that CPU doesn't overtake graphics output
+		// sf::sleep(sf::milliseconds(10)); // A number high enough that CPU doesn't overtake graphics output
 	}
 	return 0;
 }
