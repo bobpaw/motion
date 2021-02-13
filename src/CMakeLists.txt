@@ -2,9 +2,6 @@ include_directories("${SFML_INCLUDE_DIR}")
 
 set(math_library "$<$<NOT:$<C_COMPILER_ID:MSVC>>:m>")
 
-add_executable(single single.cc physics.h constants.h)
-target_link_libraries(single PUBLIC sfml-graphics sfml-window sfml-system ${math_library})
-
 add_library(physics2 STATIC physics2.cc physics2.h)
 target_link_libraries(physics2 PUBLIC sfml-graphics sfml-system ${math_library})
 
