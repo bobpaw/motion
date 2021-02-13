@@ -4,7 +4,7 @@
 #include <SFML/System.hpp>
 #include <SFML/Graphics.hpp>
 
-#include "physics2.h"
+#include "physics.h"
 
 const int ScreenWidth = 640;
 const int ScreenHeight = 400;

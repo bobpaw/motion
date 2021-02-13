@@ -5,7 +5,7 @@
 #include <SFML/System.hpp>
 #include <SFML/Graphics.hpp>
 
-#include "physics2.h"
+#include "physics.h"
 
 namespace fs = std::filesystem;
 

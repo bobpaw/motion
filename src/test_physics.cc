@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cassert>
 
-#include "physics2.h"
+#include "physics.h"
 
 
 struct MyParticleSystem: phys::ParticleSystem {
