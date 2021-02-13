@@ -39,6 +39,8 @@ int main (int argc, char* argv[]) {
 	ball.setFillColor(sf::Color::White);
 	ball.setOrigin(sf::Vector2f(10, 10));
 
+	bool playing = false;
+
 	while (graphics_window.isOpen()) {
 		while (graphics_window.pollEvent(event)) {
 			if (event.type == sf::Event::Closed) {
@@ -52,11 +54,19 @@ int main (int argc, char* argv[]) {
 				screen.add_particle(sf::Vector2f(startingSpot), sf::Vector2f((sf::Mouse::getPosition(graphics_window) - startingSpot)) / 500.f);
 				startingSpot = {-1, -1};
 				pressed.setString("Pressed: False");
+			} else if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Space) {
+				playing = !playing;
+				clock.restart();
 			}
 		}
 
 		// Motion
-		screen.update(clock.restart());
+		if (playing) {
+			screen.update(clock.restart());
+
+			// Friction, etc.
+		}
+
 
 		// Clear screen
 		graphics_window.clear();
@@ -67,8 +77,15 @@ int main (int argc, char* argv[]) {
 		if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 			arrow[1].position = sf::Vector2f(sf::Mouse::getPosition(graphics_window));
 			ball.setPosition(arrow[0].position);
+			ball.setFillColor(sf::Color::White);
 			graphics_window.draw(ball);
 			graphics_window.draw(arrow);
+		} else {
+			ball.setPosition(sf::Vector2f(sf::Mouse::getPosition(graphics_window)));
+			ball.setFillColor(sf::Color::Transparent);
+			ball.setOutlineThickness(1);
+			graphics_window.draw(ball);
+			ball.setOutlineThickness(0);
 		}
 
 		graphics_window.draw(pressed);
