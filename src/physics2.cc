@@ -35,6 +35,10 @@ namespace phys {
 			std::sin(dir * static_cast<float>(M_PI) / 180.f)) * mag;
 	}
 
+	sf::Vector2f ToPVector(sf::Vector2f v) {
+		return sf::Vector2f(std::hypot(v.x, v.y), std::atan2(v.y, v.x) * 180.0f / static_cast<float>(M_PI));
+	}
+
 	sf::RenderTexture ParticleSystem::circle_shape;
 	ParticleSystem::StaticConstructor::StaticConstructor () {
 		circle_shape.create(61, 61);

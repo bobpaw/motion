@@ -19,6 +19,9 @@ add_executable(motion2 main2.cc)
 target_link_libraries(motion2 PUBLIC physics2 sfml-graphics sfml-window sfml-system)
 add_custom_command(TARGET motion2 PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/src/FreeSans.ttf $<TARGET_FILE_DIR:motion2>/FreeSans.ttf)
 
+add_executable(single2 single2.cc)
+target_link_libraries(single2 PUBLIC physics2 sfml-graphics sfml-window sfml-system)
+
 add_executable(two2 two2.cc)
 target_link_libraries(two2 PUBLIC physics2 sfml-graphics sfml-window sfml-system)
 

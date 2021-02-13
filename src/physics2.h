@@ -10,6 +10,7 @@
 
 namespace phys {
 	sf::Vector2f PVector(float mag, float dir);
+	sf::Vector2f ToPVector(sf::Vector2f);
 
 	class ParticleSystem: public sf::Drawable, public sf::Transformable {
 	protected:
@@ -75,6 +76,14 @@ namespace phys {
 		void set_color(size_t index, const sf::Color& c);
 		sf::Vector2f get_center(size_t index) const;
 		void move_particle(size_t index, sf::Vector2f displacement);
+
+		const sf::Vector2f& velocity (size_t i) const {
+			return particles[i].velocity;
+		}
+
+		sf::Vector2f& velocity (size_t i) {
+			return particles[i].velocity;
+		}
 	};
 }
 #endif // MOTION_PHYSICS2_H_
