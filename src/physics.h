@@ -57,6 +57,8 @@ namespace phys {
 			assert(default_radius_ > 0.f);
 		}
 
+		virtual ~ParticleSystem() {}
+
 		void update(const sf::Time& elapsed);
 		size_t add_particle(sf::Vector2f pos = {0, 0}, sf::Vector2f v = {0, 0}, float r = -1.f);
 		size_t remove_particle(size_t n = 1);
